@@ -46,7 +46,7 @@ query
 
 subq
   : table_defs
-    %{ $$ = { query: $1 }; %}
+    %{ $$ = new t.Query($1); %}
   ;
 
 queries
@@ -65,7 +65,7 @@ table_defs
 
 table_def
   : table_decl LBR body RBR
-    %{ $$ = { table: { table_def: $table_decl, body: $body } }; %}
+    %{ $$ = new t.Table($table_decl.name, $body.select, $body.clauses, $table_decl); %}
   ;
 
 table_decl
@@ -77,9 +77,9 @@ table_decl
 
 body
   : fields clauses
-    %{ $$ = {select: $fields, clauses: $clauses }; %}
+    %{ $$ = { selects: $fields, clauses: $clauses }; %}
   | fields
-    %{ $$ = {select: $fields }; %}
+    %{ $$ = { select: $fields }; %}
   | clauses
     %{ $$ = { clauses: $clauses }; %}
   | .
@@ -97,13 +97,13 @@ field
   : queries
     %{ $$ = { postqueries: $1}; %}
   | expr AS term
-    %{ $$ = { field: { expr: $expr, alias: $term } }; %}
+    { $$ = new t.Expr($1, $3); }
   | ref AS term
-    %{ $$ = { field: { ref: $ref, alias: $term} }; %}
+    { $$ = $1; $$.alias = $3; }
   | ref
-    %{ $$ = { field: { ref: $ref }}; %}
+    { $$ = $1; }
   | aliased_name
-    %{ $$ = { field: $1 }; %}
+    { $$ = new t.Field($1.name, $1.alias); }
   ;
 
 expr
@@ -112,13 +112,13 @@ expr
 
 ref
   : LBRACKET term LPAREN or_dotted RPAREN RBRACKET_PL
-    %{ $$ = ['plural', $term, 'id', $or_dotted]; %}
+    { $$ = new t.PluralRef($2, $4); }
   | LBRACKET term RBRACKET_PL
-    { $$ = ['plural', $term]; }
+    { $$ = new t.PluralRef($2); }
   | LBRACKET term LPAREN or_dotted RPAREN RBRACKET
-    { $$ = ['single', $term, 'id', $or_dotted]; }
+    { $$ = new t.SingleRef($2, $4); }
   | LBRACKET term RBRACKET
-    { $$ = ['single', $term]; }
+    { $$ = new t.SingleRef($2); }
   ;
 
 join
@@ -156,3 +156,4 @@ term
 
 %%
 
+var t = require('./types');

@@ -1,14 +1,14 @@
 var parser = require('./../src/aql.js').parser;
 
 var tests = [
-    'abc { def }'
-  , 'abc { def as something } '
-  , 'abc as def { something }'
-  , 'abc on something { fra }'
-  , 'abc { def } table2 { content }'
-  , 'table { [sub(a.id)] as ssubs }'
-  , 'abc { def as def2, a as a2, (df3) as asdf0 }'
-  , 'table { regular, field, [ab], [som]s, abc on smoe {}, q2 { field } }'
+    // 'abc { def }'
+  // , 'abc { def as something } '
+  // , 'abc as def { something }'
+  // , 'abc on something { fra }'
+  // , 'abc { def } table2 { content }'
+  , 'asdfa { [sub(a.id)] as ssubs, somefield }'
+  // , 'abc { def as def2, a as a2, (df3) as asdf0 }'
+  // , 'table { regular, field, [ab], [som]s, abc on smoe {}, q2 { field } }'
 ];
 
 var t = function(text) {
