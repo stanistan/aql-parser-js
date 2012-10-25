@@ -3,25 +3,34 @@
 %lex
 %%
 
-\s*\n\s*          { /* ignore */ }
-"{"               { return 'LBR'; }
-"}"               { return 'RBR'; }
-"("               { return 'LPAREN'; }
-")"               { return 'RPAREN'; }
-"["               { return 'LBRACKET'; }
-"]s"              { return 'RBRACKET_PL'; }
-"]"               { return 'RBRACKET'; }
-"."               { return 'PERIOD'; }
-("as"|"AS")        { return 'AS'; }
-("on"|"ON")       { return 'ON'; }
-","               { return 'COMMA'; }
-[a-zA-Z][\w_]*    { return 'VAR'; }
-\s+               { /* */ }
-<<EOF>>           { return 'EOF'; }
+\s*\n\s*                  { /* ignore */ }
+"{"                       { return 'LBR'; }
+"}"                       { return 'RBR'; }
+"("                       { return 'LPAREN'; }
+")"                       { return 'RPAREN'; }
+"["                       { return 'LBRACKET'; }
+"]s"                      { return 'RBRACKET_PL'; }
+"]"                       { return 'RBRACKET'; }
+"."                       { return 'PERIOD'; }
+("as"|"AS")               { return 'AS'; }
+("on"|"ON")               { return 'ON'; }
+("where"|"WHERE")         { return 'WHERE'; }
+("order by"|"ORDER BY")   { return 'ORDER_BY'; }
+("limit"|"LIMIT")         { return 'LIMIT'; }
+("group by"|"GROUP BY")   { return 'GROUP_BY'; }
+("like"|"LIKE")           { return 'LIKE'; }
+("ilike"|"ILIKE")         { return 'ILIKE'; }
+"="                       { return 'EQ'; }
+","                       { return 'COMMA'; }
+[a-zA-Z][\w_]*            { return 'VAR'; }
+\s+                       { /* */ }
+<<EOF>>                   { return 'EOF'; }
 /lex
 
 %right LBR
 %left COMMA
+
+%options flex
 
 %start query
 
@@ -95,7 +104,7 @@ field
   ;
 
 expr
-  : LPAREN term RPAREN { $$ = $2; }
+  : LPAREN or_dotted RPAREN { $$ = $2; }
   ;
 
 ref
@@ -136,3 +145,4 @@ term
   ;
 
 %%
+

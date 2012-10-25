@@ -15,9 +15,9 @@ var queries = [
 
 var parsed = queries.map(parse);
 
-parsed.forEach(function(re) {
+parsed.forEach(function(re, k) {
 
-  describe('basic test', function() {
+  describe('basic test: ' + queries[k], function() {
 
     it('should be an object', function() {
       expect(_.isObject(re)).toBe(true);

@@ -1,7 +1,7 @@
 {
     "name": "aql-parser"
   , "version": "0.0.1"
-  , "description": "a parser for AQL in node using jison."
+  , "description": "A parser for AQL in node using jison."
   , "author": "Stan Rozenraukh <stan@stanistan.com>"
   , "dependencies": {
         "jison": "0.3.x"
@@ -11,4 +11,10 @@
         "jasmine-node": "1.0.x"
    }
   , "engine": "node >= 0.8.11"
+  , "scripts": {
+        "test": "jasmine-node ./test"
+      , "gen-parser": "node_modules/.bin/jison src/aql.jison -o src/parser.js"
+      , "t": "npm run-script gen-parser && npm test"
+      , "t-s": "npm run-script gen-parser >> /dev/null && npm test"
+    }
 }
