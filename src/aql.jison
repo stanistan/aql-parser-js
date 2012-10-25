@@ -53,7 +53,7 @@ table_defs
 
 table_def
   : table_decl LBR body RBR
-    %{ $$ = { table_def: $table_decl, body: $body }; %}
+    %{ $$ = { table: { table_def: $table_decl, body: $body } }; %}
   ;
 
 table_decl

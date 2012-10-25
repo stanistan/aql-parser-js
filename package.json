@@ -5,6 +5,7 @@
   , "author": "Stan Rozenraukh <stan@stanistan.com>"
   , "dependencies": {
         "jison": "0.3.x"
+      , "underscore": "1.4.x"
    }
   , "devDependencies": {
         "jasmine-node": "1.0.x"
