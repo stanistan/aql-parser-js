@@ -8,6 +8,10 @@
 "}"               { return 'RBR'; }
 "("               { return 'LPAREN'; }
 ")"               { return 'RPAREN'; }
+"["               { return 'LBRACKET'; }
+"]s"              { return 'RBRACKET_PL'; }
+"]"               { return 'RBRACKET'; }
+"."               { return 'PERIOD'; }
 "as"              { return 'AS'; }
 "on"              { return 'ON'; }
 ","               { return 'COMMA'; }
@@ -17,6 +21,7 @@
 /lex
 
 %right LBR
+%left COMMA
 
 %start query
 
@@ -65,7 +70,8 @@ body
     %{ $$ = {select: $fields }; %}
   | clauses
     %{ $$ = { clauses: $clauses }; %}
-  | . %{ $$ = {}; %}
+  | .
+    %{ $$ = {}; %}
   ;
 
 fields
@@ -80,12 +86,27 @@ field
     %{ $$ = { postqueries: $1}; %}
   | expr AS term
     %{ $$ = { field: { expr: $expr, alias: $term } }; %}
+  | ref AS term
+    %{ $$ = { field: { ref: $ref, alias: $term} }; %}
+  | ref
+    %{ $$ = { field: { ref: $ref }}; %}
   | aliased_name
     %{ $$ = { field: $1 }; %}
   ;
 
 expr
   : LPAREN term RPAREN { $$ = $2; }
+  ;
+
+ref
+  : LBRACKET term LPAREN term RPAREN RBRACKET_PL
+    %{ $$ = ['plural', $term1, 'id', $term2]; %}
+  | LBRACKET term RBRACKET_PL
+    { $$ = ['plural', $term]; }
+  | LBRACKET term LPAREN term RPAREN RBRACKET
+    { $$ = ['single', $term1, 'id', $term2]; }
+  | LBRACKET term RBRACKET
+    { $$ = ['single', $term]; }
   ;
 
 join
@@ -101,5 +122,6 @@ aliased_name
   ;
 
 term
-  : VAR { $$ = yytext; }
+  : VAR PERIOD VAR { $$ = $1 + '.' + $3; }
+  | VAR { $$ = yytext; }
   ;

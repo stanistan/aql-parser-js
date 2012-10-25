@@ -6,8 +6,9 @@ var tests = [
   , 'abc as def { something }'
   , 'abc on something { fra }'
   , 'abc { def } table2 { content }'
+  , 'table { [sub(a.id)] as ssubs }'
   , 'abc { def as def2, a as a2, (df3) as asdf0 }'
-  , 'table { regular, field, abc on smoe { }, q2 { field } }'
+  , 'table { regular, field, [ab], [som]s, abc on smoe { }, q2 { field } }'
 ];
 
 var t = function(text) {
@@ -16,6 +17,7 @@ var t = function(text) {
   console.log(text);
   console.log('result:');
   console.log(JSON.stringify(parser.parse(text), null, 2));
+  // console.log(parser.parse(text));
 };
 
 tests.map(t);
