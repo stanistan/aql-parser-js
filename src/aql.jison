@@ -1,9 +1,15 @@
 /* AQL Grammar */
 
 %lex
+
+%options flex case-insensitive
+
 %%
 
 \s*\n\s*                  { /* ignore */ }
+"'"                       { return 'SQUOTE'; }
+"\""                      { return 'DQUOTE'; }
+[0-9][0-9.]*              { return 'NUM'; }
 "{"                       { return 'LBR'; }
 "}"                       { return 'RBR'; }
 "("                       { return 'LPAREN'; }
@@ -12,25 +18,22 @@
 "]s"                      { return 'RBRACKET_PL'; }
 "]"                       { return 'RBRACKET'; }
 "."                       { return 'PERIOD'; }
-("as"|"AS")               { return 'AS'; }
-("on"|"ON")               { return 'ON'; }
-("where"|"WHERE")         { return 'WHERE'; }
-("order by"|"ORDER BY")   { return 'ORDER_BY'; }
-("limit"|"LIMIT")         { return 'LIMIT'; }
-("group by"|"GROUP BY")   { return 'GROUP_BY'; }
-("like"|"LIKE")           { return 'LIKE'; }
-("ilike"|"ILIKE")         { return 'ILIKE'; }
+"as"                      { return 'AS'; }
+"on"                      { return 'ON'; }
+"and"                     { return 'AND'; }
+"or"                      { return 'OR'; }
+"where"                   { return 'WHERE'; }
+"order by"                { return 'ORDER_BY'; }
+"limit"                   { return 'LIMIT'; }
+"group by"                { return 'GROUP_BY'; }
+"like"                    { return 'LIKE'; }
+"ilike"                   { return 'ILIKE'; }
 "="                       { return 'EQ'; }
 ","                       { return 'COMMA'; }
 [a-zA-Z][\w_]*            { return 'VAR'; }
 \s+                       { /* */ }
 <<EOF>>                   { return 'EOF'; }
 /lex
-
-%right LBR
-%left COMMA
-
-%options flex
 
 %start query
 
@@ -104,7 +107,7 @@ field
   ;
 
 expr
-  : LPAREN or_dotted RPAREN { $$ = $2; }
+  : LPAREN or_dotted RPAREN { $$ = '(' + $2 + ')'; }
   ;
 
 ref
@@ -124,15 +127,15 @@ join
   ;
 
 aliased_name
-  : term AS term
-    %{ $$ = {name: $term1, alias: $term2 }; %}
-  | term
-    %{ $$ = {name: $term}; %}
+  : VAR AS VAR
+    %{ $$ = {name: $1, alias: $3 }; %}
+  | VAR
+    %{ $$ = {name: $1}; %}
   ;
 
 or_dotted
   : dotted_term { $$ = $1; }
-  | term { $$ = $1; }
+  | VAR { $$ = $1; }
   ;
 
 dotted_term
@@ -140,8 +143,15 @@ dotted_term
     { $$ = $1 + '.' + $3; }
   ;
 
+string
+  : SQUOTE '.' SQUOTE { $$ = [$2]; }
+  | DQUOTE '.' DQUOTE { $$ = [$2]; }
+  ;
+
 term
   : VAR { $$ = yytext; }
+  | string { $$ = $1; }
+  | NAT { $$ = $}
   ;
 
 %%
