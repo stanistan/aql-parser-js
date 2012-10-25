@@ -8,6 +8,7 @@ var parser = require('./../src/parser.js')
 var queries = [
     'table { field }'
   , 'table as table_alias { field }'
+  , 'table AS table_alias { field } '
   , 'table as table_alias { field } table2 as table2_alias { }'
   , 'table as table_alias { field as field_alias }'
 ];

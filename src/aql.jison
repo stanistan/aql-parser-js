@@ -12,8 +12,8 @@
 "]s"              { return 'RBRACKET_PL'; }
 "]"               { return 'RBRACKET'; }
 "."               { return 'PERIOD'; }
-"as"              { return 'AS'; }
-"on"              { return 'ON'; }
+("as"|"AS")        { return 'AS'; }
+("on"|"ON")       { return 'ON'; }
 ","               { return 'COMMA'; }
 [a-zA-Z][\w_]*    { return 'VAR'; }
 \s+               { /* */ }
@@ -99,12 +99,12 @@ expr
   ;
 
 ref
-  : LBRACKET term LPAREN term RPAREN RBRACKET_PL
-    %{ $$ = ['plural', $term1, 'id', $term2]; %}
+  : LBRACKET term LPAREN or_dotted RPAREN RBRACKET_PL
+    %{ $$ = ['plural', $term, 'id', $or_dotted]; %}
   | LBRACKET term RBRACKET_PL
     { $$ = ['plural', $term]; }
-  | LBRACKET term LPAREN term RPAREN RBRACKET
-    { $$ = ['single', $term1, 'id', $term2]; }
+  | LBRACKET term LPAREN or_dotted RPAREN RBRACKET
+    { $$ = ['single', $term, 'id', $or_dotted]; }
   | LBRACKET term RBRACKET
     { $$ = ['single', $term]; }
   ;
@@ -121,7 +121,18 @@ aliased_name
     %{ $$ = {name: $term}; %}
   ;
 
-term
-  : VAR PERIOD VAR { $$ = $1 + '.' + $3; }
-  | VAR { $$ = yytext; }
+or_dotted
+  : dotted_term { $$ = $1; }
+  | term { $$ = $1; }
   ;
+
+dotted_term
+  : VAR PERIOD VAR
+    { $$ = $1 + '.' + $3; }
+  ;
+
+term
+  : VAR { $$ = yytext; }
+  ;
+
+%%
