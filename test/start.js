@@ -6,7 +6,7 @@ var tests = [
   , 'abc as def { something }'
   , 'abc on something { fra }'
   , 'abc { def } table2 { content }'
-  , 'table { [sub(a.id)] as ssubs }'
+  , 'table { [sub(a.ids)] as ssubs }'
   , 'abc { def as def2, a as a2, (df3) as asdf0 }'
   , 'table { regular, field, [ab], [som]s, abc on smoe {}, q2 { field } }'
 ];
