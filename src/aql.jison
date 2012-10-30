@@ -28,6 +28,8 @@
 "group by"                { return 'GROUP_BY'; }
 "like"                    { return 'LIKE'; }
 "ilike"                   { return 'ILIKE'; }
+"offset"                  { return 'OFFSET'; }
+"having"                  { return 'HAVING'; }
 "="                       { return 'EQ'; }
 ","                       { return 'COMMA'; }
 [a-zA-Z][\w_]*            { return 'VAR'; }

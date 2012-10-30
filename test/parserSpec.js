@@ -1,5 +1,5 @@
 
-var parser = require('./../src/parser.js')
+var parser = require('./../src/parser')
   , _ = require('underscore')
   , t = require('./../src/types')
   , parse = function(text) {
