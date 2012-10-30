@@ -12,6 +12,7 @@ var queries = [
   , 'table AS table_alias { field } '
   , 'table as table_alias { field } table2 as table2_alias { }'
   , 'table as table_alias { field as field_alias }'
+  , 'table as table_alias { field as field_alias, [sub], [sub2(this_id)]s as something }'
 ];
 
 var parsed = queries.map(parse);
@@ -68,3 +69,38 @@ aliased.forEach(function(re) {
   });
 
 });
+
+describe('should be a field/ref', function() {
+
+  var ref = parsed[5]
+    , s = ref.tables[0].selects
+    , a = s[1]
+    , b = s[2];
+
+  it('should have two sels', function() {
+    expect(_.isArray(s)).toBe(true);
+    expect(s.length).toEqual(3);
+  });
+
+  it('is a ref type', function() {
+    expect(a.isa(t.Ref)).toBe(true);
+    expect(a.isa(t.SingleRef)).toBe(true);
+  });
+
+  it('is a plural ref type', function() {
+    expect(b.isa(t.Ref)).toBe(true);
+    expect(b.isa(t.PluralRef)).toBe(true);
+  });
+
+  it('should have properties', function() {
+    expect(a.name).toEqual('sub');
+    expect(a.alias).toEqual('');
+    expect(a.id).toBe(null);
+
+    expect(b.name).toEqual('sub2');
+    expect(b.alias).toEqual('something');
+    expect(b.id).toEqual('this_id');
+  });
+
+});
+

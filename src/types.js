@@ -20,7 +20,7 @@ var Field = inherit(Sel, function(name, alias) {
 
 var Ref = inherit(Sel, function(name, id) {
   this.name = name;
-  this.id = id;
+  this.id = id || null;
 });
 
 var SingleRef = inherit(Ref, function(name, id) {
