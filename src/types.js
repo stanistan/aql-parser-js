@@ -51,6 +51,10 @@ var Table = inherit(Type, function(name, selects, clauses, extra) {
   _.each(extra || {}, function(v, n) { t[n] = v; });
 });
 
+var isType = function(t) {
+  return t && _.isObject(t) && t instanceof Type;
+};
+
 // and out.
 
 exports.Field = Field;
@@ -60,3 +64,4 @@ exports.PluralRef = PluralRef;
 exports.Query = Query;
 exports.Table = Table;
 exports.Expr = Expr;
+exports.isType = isType;

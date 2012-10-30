@@ -11,7 +11,7 @@ var $0 = $$.length - 1;
 switch (yystate) {
 case 1: return $$[$0-1]; 
 break;
-case 2: this.$ = { query: $$[$0] }; 
+case 2: this.$ = new t.Query($$[$0]); 
 break;
 case 3: this.$ = $$[$0-2]; this.$.push($$[$0]); 
 break;
@@ -21,15 +21,15 @@ case 5: this.$ = $$[$0-1]; this.$.push($$[$0]);
 break;
 case 6: this.$ = [$$[$0]]; 
 break;
-case 7: this.$ = { table: { table_def: $$[$0-3], body: $$[$0-1] } }; 
+case 7: this.$ = new t.Table($$[$0-3].name, $$[$0-1].select, $$[$0-1].clauses, $$[$0-3]); 
 break;
 case 8: this.$ = $$[$0-2]; this.$.join = $$[$0]; 
 break;
 case 9: this.$ = $$[$0]; 
 break;
-case 10: this.$ = {select: $$[$0-1], clauses: $$[$0] }; 
+case 10: this.$ = { selects: $$[$0-1], clauses: $$[$0] }; 
 break;
-case 11: this.$ = {select: $$[$0] }; 
+case 11: this.$ = { select: $$[$0] }; 
 break;
 case 12: this.$ = { clauses: $$[$0] }; 
 break;
@@ -41,23 +41,23 @@ case 15: this.$ = [$$[$0]];
 break;
 case 16: this.$ = { postqueries: $$[$0]}; 
 break;
-case 17: this.$ = { field: { expr: $$[$0-2], alias: $$[$0] } }; 
+case 17: this.$ = new t.Expr($$[$0-2], $$[$0]); 
 break;
-case 18: this.$ = { field: { ref: $$[$0-2], alias: $$[$0]} }; 
+case 18: this.$ = $$[$0-2]; this.$.alias = $$[$0]; 
 break;
-case 19: this.$ = { field: { ref: $$[$0] }}; 
+case 19: this.$ = $$[$0]; 
 break;
-case 20: this.$ = { field: $$[$0] }; 
+case 20: this.$ = new t.Field($$[$0].name, $$[$0].alias); 
 break;
 case 21: this.$ = '(' + $$[$0-1] + ')'; 
 break;
-case 22: this.$ = ['plural', $$[$0-4], 'id', $$[$0-2]]; 
+case 22: this.$ = new t.PluralRef($$[$0-4], $$[$0-2]); 
 break;
-case 23: this.$ = ['plural', $$[$0-1]]; 
+case 23: this.$ = new t.PluralRef($$[$0-1]); 
 break;
-case 24: this.$ = ['single', $$[$0-4], 'id', $$[$0-2]]; 
+case 24: this.$ = new t.SingleRef($$[$0-4], $$[$0-2]); 
 break;
-case 25: this.$ = ['single', $$[$0-1]]; 
+case 25: this.$ = new t.SingleRef($$[$0-1]); 
 break;
 case 26: this.$ = $$[$0]; 
 break;
@@ -194,6 +194,7 @@ parse: function parse(input) {
 };
 
 
+var t = require('./types');
 /* Jison generated lexer */
 var lexer = (function(){
 var lexer = ({EOF:1,
