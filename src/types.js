@@ -4,38 +4,38 @@ var _ = require('underscore')
   , inherit = u.inherit
   , Type = u.Type;
 
-var Sel = inherit(Type, function() {
+var Sel = inherit('Sel', Type, function() {
   this.alias = '';
 });
 
-var Expr = inherit(Sel, function(value, alias) {
+var Expr = inherit('Expr', Sel, function(value, alias) {
   this.value = value;
   this.alias = alias || '';
 });
 
-var Field = inherit(Sel, function(name, alias) {
+var Field = inherit('Field', Sel, function(name, alias) {
   this.name = name;
   this.alias = alias || '';
 });
 
-var Ref = inherit(Sel, function(name, id) {
+var Ref = inherit('Ref', Sel, function(name, id) {
   this.name = name;
   this.id = id || null;
 });
 
-var SingleRef = inherit(Ref, function(name, id) {
+var SingleRef = inherit('SingleRef', Ref, function(name, id) {
   Ref.call(this, name, id);
 });
 
-var PluralRef = inherit(Ref, function(name, id) {
+var PluralRef = inherit('PluralRef', Ref, function(name, id) {
   Ref.call(this, name, id);
 });
 
-var Query = inherit(Sel, function(tables) {
+var Query = inherit('Query', Sel, function(tables) {
   this.tables = tables || [];
 });
 
-var Table = inherit(Type, function(name, selects, clauses, extra) {
+var Table = inherit('Table', Type, function(name, selects, clauses, extra) {
   var t = this;
 
   if (!name) {
@@ -55,13 +55,20 @@ var isType = function(t) {
   return t && _.isObject(t) && t instanceof Type;
 };
 
+var types = {
+    Field: Field
+  , Ref: Ref
+  , SingleRef: SingleRef
+  , PluralRef: PluralRef
+  , Query: Query
+  , Table: Table
+  , Expr: Expr
+  , Sel: Sel
+};
+
 // and out.
 
-exports.Field = Field;
-exports.Ref = Ref;
-exports.SingleRef = SingleRef;
-exports.PluralRef = PluralRef;
-exports.Query = Query;
-exports.Table = Table;
-exports.Expr = Expr;
+exports.types = types;
+exports.inherits = _.bind(u.inheritsTypes, null, types);
+exports = _.extend(exports, types);
 exports.isType = isType;
