@@ -139,7 +139,7 @@ where
   ;
 
 group_by
-  : group_by by_exprs
+  : GROUP_BY by_exprs
     { $$ = $2; }
   | .
     { $$ = []; }
@@ -250,9 +250,8 @@ literal
   ;
 
 term
-  : VAR { $$ = yytext; }
+  : VAR { $$ = $1; }
   | literal { $$ = $1; }
-
   ;
 
 %%
