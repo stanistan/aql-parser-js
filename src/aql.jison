@@ -7,7 +7,6 @@
 %%
 
 \s*\n\s*                  { /* ignore */ }
-
 "'"                       { return 'SQUOTE'; }
 "\""                      { return 'DQUOTE'; }
 [0-9][0-9.]*              { return 'NUM'; }
@@ -26,6 +25,7 @@
 "="                       { return 'EQ'; }
 "as"                      { return 'AS'; }
 "on"                      { return 'ON'; }
+("asc"|"desc")              { return 'ORD'; }
 "and"                     { return 'AND'; }
 "or"                      { return 'OR'; }
 "like"                    { return 'LIKE'; }
@@ -98,16 +98,16 @@ body
 
 by_expr
   : expr ORD
-    { $$ = $1; $$.push($2); }
+    { $$ = [$1]; $$.push($2); }
   | epxr
-    { $$ = $1; }
+    { $$ = [$1]; }
   ;
 
 by_exprs
   : by_exprs COMMA by_expr
-    { $$ = [$1, $3]; }
+    { $$ = $1; $$.push($3); }
   | by_expr
-    { $$ = $1; }
+    { $$ = [$1]; }
   ;
 
 exprs
@@ -153,7 +153,7 @@ having
   ;
 
 order_by
-  : ORDER_BY expr
+  : ORDER_BY by_exprs
     { $$ = $2; }
   | .
     { $$ = []; }
