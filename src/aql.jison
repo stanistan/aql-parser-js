@@ -108,7 +108,7 @@ body
 by_expr
   : expr ORD
     { $$ = [$1]; $$.push($2); }
-  | epxr
+  | expr
     { $$ = [$1]; }
   ;
 
@@ -165,14 +165,14 @@ limit
   : LIMIT expr
     { $$ = $2; }
   | .
-    { $$ = []; }
+    { $$ = -1; }
   ;
 
 offset
   : OFFSET expr
     { $$ = $2; }
   | .
-    { $$ = []; }
+    { $$ = 0; }
   ;
 
 fields

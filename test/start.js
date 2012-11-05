@@ -16,7 +16,9 @@ var tests = [
           where \
             active = 1 \
             and id in (1, 2, 3) \
-            and t.e_id in ( e { id as id } ) \
+            and t.e_id in ( e { id where something.else = 10} ) \
+          order by id \
+          offset 100  \
       }'
 
 ];
