@@ -11,7 +11,13 @@ var tests = [
   // , 'table { regular, field, [ab], [som]s, abc on smoe {}, q2 { field } }'
   // , 't { id, subt { field } }'
   // , 't { where id = 1 order by name asc, b desc }'
-  , 't { where id = 1 group by break desc order by name asc LIMIT 10 offset 1 }'
+  , ' t as table { \
+          some_field \
+          where \
+            active = 1 \
+            and id in (1, 2, 3) \
+            and t.e_id in ( e { id as id } ) \
+      }'
 
 ];
 

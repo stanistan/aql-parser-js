@@ -7,11 +7,10 @@
 %%
 
 \s*\n\s*                  { /* ignore */ }
-"'"                       { return 'SQUOTE'; }
-"\""                      { return 'DQUOTE'; }
-[0-9][0-9.]*              { return 'NUM'; }
+
 [\w]?\"(\\.|[^\\"])*\"    { return 'STRING_LITERAL_D'; }
 [\w]?\'(\\.|[^\\'])*\'    { return 'STRING_LITERAL_S'; }
+
 "{"                       { return 'LBR'; }
 "}"                       { return 'RBR'; }
 "("                       { return 'LPAREN'; }
@@ -20,30 +19,36 @@
 "]s"                      { return 'RBRACKET_PL'; }
 "]"                       { return 'RBRACKET'; }
 "."                       { return 'PERIOD'; }
+","                       { return 'COMMA'; }
 "~"                       { return 'TILDE'; }
+
 "in"                      { return 'IN'; }
 "="                       { return 'EQ'; }
-"as"                      { return 'AS'; }
-"on"                      { return 'ON'; }
-("asc"|"desc")              { return 'ORD'; }
-"and"                     { return 'AND'; }
-"or"                      { return 'OR'; }
 "like"                    { return 'LIKE'; }
 "ilike"                   { return 'ILIKE'; }
+"and"                     { return 'AND'; }
+"or"                      { return 'OR'; }
+
+"as"                      { return 'AS'; }
+"on"                      { return 'ON'; }
+
+("asc"|"desc")            { return 'ORD'; }
+
 "where"                   { return 'WHERE'; }
 "order by"                { return 'ORDER_BY'; }
 "limit"                   { return 'LIMIT'; }
 "group by"                { return 'GROUP_BY'; }
 "offset"                  { return 'OFFSET'; }
 "having"                  { return 'HAVING'; }
-","                       { return 'COMMA'; }
+
+[0-9][0-9.]*              { return 'NUM'; }
 [a-zA-Z][\w_]*            { return 'VAR'; }
 \s+                       { /* */ }
 <<EOF>>                   { return 'EOF'; }
 /lex
 
-%left LIKE ILIKE OFFSET
 %left AND OR
+%left EQ LIKE ILIKE
 
 %start statement
 
@@ -51,12 +56,12 @@
 
 statement
   : query EOF
-    %{ return $query; %}
+    { return $query; }
   ;
 
 query
   : table_defs
-    %{ $$ = new t.Query($1); %}
+    { $$ = new t.Query($1); }
   ;
 
 queries
@@ -75,21 +80,25 @@ table_defs
 
 table_def
   : table_decl LBR body RBR
-    %{ $$ = new t.Table($table_decl.name, $body.select, $body.clauses, $table_decl); %}
+    { $$ = new t.Table($table_decl.name, $body.selects, $body.clauses, $table_decl); }
   ;
 
 table_decl
-  : aliased_name ON expr
-    { $$ = $aliased_name; $$.join = $expr; }
-  | aliased_name
-    { $$ = $aliased_name; }
+  : VAR AS VAR ON expr
+    %{ $$ = { name: $1, alias: $3, join: $expr }; %}
+  | VAR ON expr
+    %{ $$ = { name: $1, join: $expr }; %}
+  | VAR AS VAR
+    %{ $$ = { name: $1, alias: $3 }; %}
+  | VAR
+    %{ $$ = { name: $1 }; %}
   ;
 
 body
   : fields clauses
     %{ $$ = { selects: $fields, clauses: $clauses }; %}
   | fields
-    %{ $$ = { select: $fields }; %}
+    %{ $$ = { selects: $fields }; %}
   | clauses
     %{ $$ = { clauses: $clauses }; %}
   | .
@@ -108,13 +117,6 @@ by_exprs
     { $$ = $1; $$.push($3); }
   | by_expr
     { $$ = [$1]; }
-  ;
-
-exprs
-  : exprs COMMA expr
-    { $$ = [$1, $3]; }
-  | expr
-    { $$ = $1; }
   ;
 
 clauses
@@ -181,11 +183,9 @@ fields
   ;
 
 field
-  : queries
-    %{ $$ = { postqueries: $1}; %}
-  | expr AS term
+  : expr AS expr
     { $$ = new t.Expr($1, $3); }
-  | ref AS term
+  | ref AS expr
     { $$ = $1; $$.alias = $3; }
   | ref
     { $$ = $1; }
@@ -193,36 +193,34 @@ field
     { $$ = new t.Field($1.name, $1.alias); }
   ;
 
+literals
+  : literals COMMA literal { $$ = $1; $$.push($3); }
+  | literal {$$ = [$1]; }
+  ;
+
 expr
-  : LPAREN expr RPAREN { $$ = [$1, $2, $3]; }
-  | LPAREN query RPAREN { $$ = $2; }
-  | expr comb expr { $$ = [$1, $2, $3]; }
-  | expr comp expr { $$ = [$1, $2, $3]; }
+  : expr IN LPAREN literals RPAREN  { $$ = [$1, 'in', $literals]; }
+  | expr IN LPAREN query RPAREN { $$ = [$1, 'in', $query]; }
+  | expr EQ expr { $$ = [$1, $2, $3]; }
+  | expr LIKE expr { $$ = [$1, $2, $3]; }
+  | expr ILIKE expr { $$ = [$1, $2, $3]; }
+  | expr TILDE expr { $$ = [$1, $2, $3]; }
+  | expr AND expr { $$ = [$1, $2, $3]; }
+  | expr OR expr { $$ = [$1, $2, $3]; }
+  | LPAREN expr RPAREN { $$ = [$2]; }
   | or_dotted { $$ = $1; }
   | literal { $$ = $1; }
   ;
 
-comp
-  : EQ { $$ = $1 }
-  | LIKE { $$ = $1 }
-  | ILIKE { $$ = $1 }
-  | TILDE { $$ = $1 }
-  | IN { $$ = $1; }
-  ;
-
-comb
-  : AND { $$ = $1 }
-  | OR { $$ = $1 }
-  ;
 
 ref
-  : LBRACKET term LPAREN or_dotted RPAREN RBRACKET_PL
+  : LBRACKET VAR LPAREN or_dotted RPAREN RBRACKET_PL
     { $$ = new t.PluralRef($2, $4); }
-  | LBRACKET term RBRACKET_PL
+  | LBRACKET VAR RBRACKET_PL
     { $$ = new t.PluralRef($2); }
-  | LBRACKET term LPAREN or_dotted RPAREN RBRACKET
+  | LBRACKET VAR LPAREN or_dotted RPAREN RBRACKET
     { $$ = new t.SingleRef($2, $4); }
-  | LBRACKET term RBRACKET
+  | LBRACKET VAR RBRACKET
     { $$ = new t.SingleRef($2); }
   ;
 
@@ -234,24 +232,16 @@ aliased_name
   ;
 
 or_dotted
-  : dotted_term { $$ = $1; }
-  | VAR { $$ = $1; }
-  ;
-
-dotted_term
   : VAR PERIOD VAR
     { $$ = $1 + '.' + $3; }
+  | VAR
+    { $$ = $1; }
   ;
 
 literal
   : STRING_LITERAL_S { $$ = $1; }
   | STRING_LITERAL_D { $$ = $1; }
-  | NUM { $$ = $1 }
-  ;
-
-term
-  : VAR { $$ = $1; }
-  | literal { $$ = $1; }
+  | NUM { $$ = parseFloat($1, 10); }
   ;
 
 %%
