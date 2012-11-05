@@ -1,6 +1,7 @@
 
-var parser = require('./../src/parser.js')
+var parser = require('./../src/parser')
   , _ = require('underscore')
+  , t = require('./../src/types')
   , parse = function(text) {
       return parser.parse(text);
     };
@@ -11,6 +12,7 @@ var queries = [
   , 'table AS table_alias { field } '
   , 'table as table_alias { field } table2 as table2_alias { }'
   , 'table as table_alias { field as field_alias }'
+  , 'table as table_alias { field as field_alias, [sub], [sub2(this_id)]s as something }'
 ];
 
 var parsed = queries.map(parse);
@@ -21,31 +23,33 @@ parsed.forEach(function(re, k) {
 
     it('should be an object', function() {
       expect(_.isObject(re)).toBe(true);
+      expect(t.isType(re)).toBe(true);
     });
 
     it('query definition should have an array of tables', function() {
-      expect(_.isArray(re.query)).toBe(true);
-      re.query.forEach(function(t) {
-        expect(_.isObject(t)).toBe(true);
-        expect(_.isObject(t.table)).toBe(true);
+      expect(_.isArray(re.tables)).toBe(true);
+      re.tables.forEach(function(a) {
+        expect(_.isObject(a)).toBe(true);
+        expect(t.isType(a)).toBe(true);
+        expect(a.isa(t.Table)).toBe(true);
       });
     });
 
-    var t = re.query[0].table;
+    var a = re.tables[0];
 
     it('should have a table name', function() {
-      expect(t.table_def.name).toEqual("table");
+      expect(a.name).toEqual("table");
     });
-
-    it('should have a body with select', function() {
-      expect(_.isObject(t.body)).toBe(true);
-    });
-
-    var s = t.body.select;
 
     it('select should have an array of objects', function() {
-      expect(_.isArray(s)).toBe(true);
-      expect(s[0].field.name).toEqual('field');
+      expect(_.isArray(a.selects)).toBe(true);
+    });
+
+    var s = a.selects[0];
+
+    it('should have a first field name equal to field', function() {
+      expect(s.isa(t.Field)).toBe(true);
+      expect(s.name).toEqual('field');
     });
 
   });
@@ -58,10 +62,45 @@ aliased.forEach(function(re) {
 
   describe('table aliases alias', function() {
     it('should equal table name + _alias', function() {
-      re.query.forEach(function(t) {
-        expect(t.table.table_def.alias).toBe(t.table.table_def.name + '_alias');
+      re.tables.forEach(function(table) {
+        expect(table.alias).toBe(table.name + '_alias');
       });
     });
   });
 
 });
+
+describe('should be a field/ref', function() {
+
+  var ref = parsed[5]
+    , s = ref.tables[0].selects
+    , a = s[1]
+    , b = s[2];
+
+  it('should have two sels', function() {
+    expect(_.isArray(s)).toBe(true);
+    expect(s.length).toEqual(3);
+  });
+
+  it('is a ref type', function() {
+    expect(a.isa(t.Ref)).toBe(true);
+    expect(a.isa(t.SingleRef)).toBe(true);
+  });
+
+  it('is a plural ref type', function() {
+    expect(b.isa(t.Ref)).toBe(true);
+    expect(b.isa(t.PluralRef)).toBe(true);
+  });
+
+  it('should have properties', function() {
+    expect(a.name).toEqual('sub');
+    expect(a.alias).toEqual('');
+    expect(a.id).toBe(null);
+
+    expect(b.name).toEqual('sub2');
+    expect(b.alias).toEqual('something');
+    expect(b.id).toEqual('this_id');
+  });
+
+});
+
