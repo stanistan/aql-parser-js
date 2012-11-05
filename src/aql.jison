@@ -22,6 +22,11 @@
 ","                       { return 'COMMA'; }
 "~"                       { return 'TILDE'; }
 
+"*"                       { return 'STAR'; }
+"-"                       { return 'MINUS'; }
+"+"                       { return 'PLUS'; }
+"/"                       { return 'DIV'; }
+
 "in"                      { return 'IN'; }
 "="                       { return 'EQ'; }
 "like"                    { return 'LIKE'; }
@@ -47,8 +52,11 @@
 <<EOF>>                   { return 'EOF'; }
 /lex
 
+
 %left AND OR
 %left EQ LIKE ILIKE
+%left STAR DIV
+%left MINUS PLUS
 
 %start statement
 
@@ -183,35 +191,52 @@ fields
   ;
 
 field
-  : expr AS expr
-    { $$ = new t.Expr($1, $3); }
-  | ref AS expr
+  : ref AS expr
     { $$ = $1; $$.alias = $3; }
   | ref
+    { $$ = $1; }
+  | aliased_expr
     { $$ = $1; }
   | aliased_name
     { $$ = new t.Field($1.name, $1.alias); }
   ;
 
-literals
-  : literals COMMA literal { $$ = $1; $$.push($3); }
-  | literal {$$ = [$1]; }
+aliased_expr
+  : expr AS alias { $$ = new t.Expr($1, $3); }
+  | expr { $$ = $1; }
+  ;
+
+alias
+  : literal
+    { $$ = $1; }
+  | VAR
+    { $$ = $1; }
+  ;
+
+exprs
+  : exprs COMMA expr { $$ = $1; $$.push($3); }
+  | expr { $$ = [$1]; }
+  | STAR { $$ = [$1]; }
   ;
 
 expr
-  : expr IN LPAREN literals RPAREN  { $$ = [$1, 'in', $literals]; }
-  | expr IN LPAREN query RPAREN { $$ = [$1, 'in', $query]; }
+  : expr MINUS expr  { $$ = [$1, $2, $3]; }
+  | expr PLUS expr { $$ = [$1, $2, $3]; }
+  | expr STAR expr { $$ = [$1, $2, $3]; }
+  | expr DIV expr { $$ = [$1, $2, $3]; }
   | expr EQ expr { $$ = [$1, $2, $3]; }
   | expr LIKE expr { $$ = [$1, $2, $3]; }
   | expr ILIKE expr { $$ = [$1, $2, $3]; }
   | expr TILDE expr { $$ = [$1, $2, $3]; }
   | expr AND expr { $$ = [$1, $2, $3]; }
   | expr OR expr { $$ = [$1, $2, $3]; }
+  | expr IN LPAREN query RPAREN { $$ = [$1, 'in', $query]; }
+  | expr IN LPAREN exprs RPAREN  { $$ = [$1, 'in', $exprs]; }
+  | VAR LPAREN exprs RPAREN {$$ = [$1, $2, $3, $4]; }
   | LPAREN expr RPAREN { $$ = [$2]; }
   | or_dotted { $$ = $1; }
   | literal { $$ = $1; }
   ;
-
 
 ref
   : LBRACKET VAR LPAREN or_dotted RPAREN RBRACKET_PL
@@ -225,7 +250,7 @@ ref
   ;
 
 aliased_name
-  : VAR AS VAR
+  : VAR AS alias
     %{ $$ = {name: $1, alias: $3 }; %}
   | VAR
     %{ $$ = {name: $1}; %}

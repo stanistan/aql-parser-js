@@ -11,16 +11,27 @@ var tests = [
   // , 'table { regular, field, [ab], [som]s, abc on smoe {}, q2 { field } }'
   // , 't { id, subt { field } }'
   // , 't { where id = 1 order by name asc, b desc }'
-  , ' t as table { \
-          some_field \
-          where \
-            active = 1 \
-            and id in (1, 2, 3) \
-            and t.e_id in ( e { id where something.else = 10} ) \
-          order by id \
-          offset 100  \
-      }'
-
+  // , ' t as table { \
+  //         some_field, \
+  //         "a string" as "another string" \
+  //         where \
+  //           active = 1 \
+  //           and id in (1, 2, 3) \
+  //         order by id desc, name \
+  //         offset 100  \
+  //     }'
+  // , 'table { where id in (another { doing_a_query }) }'
+  // , ' artist {\
+  //       artist_type_id,\
+  //       name,\
+  //       bio,\
+  //       [artist_genre]s\
+  //     }\
+  //     account_artist {\
+  //       artist_id,\
+  //       account_id\
+  //     }'
+  // , 'table on a - b = 10 {  } '
 ];
 
 var t = function(text) {
