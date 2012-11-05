@@ -49,6 +49,9 @@ var Type = inherit(
       , toString: function() {
           return '[' + this.getTypeName() + ']';
         }
+      , toJSON: function() {
+          return _.extend(this, {type: this.getTypeName() });
+        }
     }
 );
 
