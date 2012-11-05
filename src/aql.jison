@@ -46,9 +46,13 @@
 "offset"                  { return 'OFFSET'; }
 "having"                  { return 'HAVING'; }
 
-[0-9][0-9.]*              { return 'NUM'; }
+[a-zA-Z][\w_]*"."[a-zA-Z][\w_]* { return 'DOTTED_VAR'; }
 [a-zA-Z][\w_]*            { return 'VAR'; }
+
+[0-9][0-9.]*              { return 'NUM'; }
+
 \s+                       { /* */ }
+
 <<EOF>>                   { return 'EOF'; }
 /lex
 
@@ -100,8 +104,6 @@ table_decl
     %{ $$ = { name: $1, join: $expr }; %}
   | VAR AS VAR
     %{ $$ = { name: $1, alias: $3 }; %}
-  | VAR
-    %{ $$ = { name: $1 }; %}
   ;
 
 body
@@ -237,8 +239,8 @@ expr
   | expr IN LPAREN exprs RPAREN  { $$ = [$1, 'in', $exprs]; }
   | VAR LPAREN exprs RPAREN {$$ = [$1, $2, $3, $4]; }
   | LPAREN expr RPAREN { $$ = [$2]; }
-  | or_dotted { $$ = $1; }
   | literal { $$ = $1; }
+  | or_dotted { $$ = $1; }
   ;
 
 ref
@@ -260,8 +262,8 @@ aliased_name
   ;
 
 or_dotted
-  : VAR PERIOD VAR
-    { $$ = $1 + '.' + $3; }
+  : DOTTED_VAR
+    { $$ = $1 }
   | VAR
     { $$ = $1; }
   ;
