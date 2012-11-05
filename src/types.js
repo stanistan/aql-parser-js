@@ -35,7 +35,7 @@ var Query = inherit('Query', Sel, function(tables) {
   this.tables = tables || [];
 });
 
-var Table = inherit('Table', Type, function(name, selects, clauses, extra) {
+var Table = inherit('Table', Type, function(name, selects, clauses, post, extra) {
   var t = this;
 
   if (!name) {
@@ -47,6 +47,7 @@ var Table = inherit('Table', Type, function(name, selects, clauses, extra) {
   this.join = '';
   this.selects = selects || [];
   this.clauses = clauses || [];
+  this.post = post || [];
 
   _.each(extra || {}, function(v, n) { t[n] = v; });
 });

@@ -67,16 +67,16 @@ statement
     { return $query; }
   ;
 
-query
-  : table_defs
-    { $$ = new t.Query($1); }
-  ;
-
 queries
   : queries COMMA query
     { $$ = $1; $$.push($3); }
-  | subq
+  | query
     { $$ = [$1]; }
+  ;
+
+query
+  : table_defs
+    { $$ = new t.Query($1); }
   ;
 
 table_defs
@@ -88,9 +88,9 @@ table_defs
 
 table_def
   : table_decl LBR body RBR
-    { $$ = new t.Table($table_decl.name, $body.selects, $body.clauses, $table_decl); }
+    { $$ = new t.Table($table_decl.name, $body.selects, $body.clauses, $body.posts, $table_decl); }
   | VAR LBR body RBR
-    { $$ = new t.Table($1, $body.selects, $body.clauses); }
+    { $$ = new t.Table($1, $body.selects, $body.clauses, $body.post, {}); }
   ;
 
 table_decl
@@ -105,14 +105,18 @@ table_decl
   ;
 
 body
-  : fields clauses
-    %{ $$ = { selects: $fields, clauses: $clauses }; %}
+  : fields COMMA queries clauses
+    %{ $$ = { selects: $fields, post: $queries, clauses: $clauses }; %}
+  | fields clauses
+    %{ $$ = { selects: $fields, post: [], clauses: $clauses }; %}
   | fields
-    %{ $$ = { selects: $fields }; %}
+    %{ $$ = { selects: $fields, post: [], clauses: [] }; %}
+  | queries clauses
+    %{ $$ = { selects: [], post: $queries, clauses: $clauses }; %}
   | clauses
-    %{ $$ = { clauses: $clauses }; %}
+    %{ $$ = { selects: [], post: [], clauses: $clauses }; %}
   | .
-    %{ $$ = {}; %}
+    %{ $$ = { selects: [], post: [], clauses: [] }; %}
   ;
 
 by_expr
@@ -197,17 +201,12 @@ field
     { $$ = $1; $$.alias = $3; }
   | ref
     { $$ = $1; }
-  | aliased_expr
-    { $$ = $1; }
+  | expr AS alias
+    { $$ = new t.Expr($1, $3); }
   | aliased_name
     { $$ = new t.Field($1.name, $1.alias); }
   | STAR
     { $$ = '*'; }
-  ;
-
-aliased_expr
-  : expr AS alias { $$ = new t.Expr($1, $3); }
-  | expr { $$ = $1; }
   ;
 
 alias

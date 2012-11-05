@@ -14,6 +14,6 @@
   , "scripts": {
         "test": "jasmine-node ./test"
       , "gen-parser": "node_modules/.bin/jison src/aql.jison -o src/parser.js"
-      , "build-test": "npm run-script gen-parser >> verbose && npm test"
+      , "build-test": "npm run-script gen-parser > verbose && npm test"
     }
 }
