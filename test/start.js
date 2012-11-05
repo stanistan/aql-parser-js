@@ -20,18 +20,18 @@ var tests = [
   //         order by id desc, name \
   //         offset 100  \
   //     }'
-  // , 'table { where id in (another { doing_a_query }) }'
+  , 'table { where id in (another { * }) }'
   // , ' artist {\
   //       artist_type_id,\
   //       name,\
   //       bio,\
-  //       [artist_genre]s\
+  //       [artist_genre(asdf)]s\
   //     }\
-  //     account_artist {\
+  //     account_artist as act {\
   //       artist_id,\
   //       account_id\
   //     }'
-  // , 'table on a - b = 10 {  } '
+  // , 'table { (a - b) as difference } '
 ];
 
 var t = function(text) {

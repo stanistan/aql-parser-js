@@ -89,6 +89,8 @@ table_defs
 table_def
   : table_decl LBR body RBR
     { $$ = new t.Table($table_decl.name, $body.selects, $body.clauses, $table_decl); }
+  | VAR LBR body RBR
+    { $$ = new t.Table($1, $body.selects, $body.clauses); }
   ;
 
 table_decl
@@ -199,6 +201,8 @@ field
     { $$ = $1; }
   | aliased_name
     { $$ = new t.Field($1.name, $1.alias); }
+  | STAR
+    { $$ = '*'; }
   ;
 
 aliased_expr
