@@ -6,8 +6,8 @@ var tests = [
   , 'abc as def { something }'
   , 'abc on something { fra }'
   , 'abc { def } table2 { content }'
-  // , 'asdfa { [sub(a.id)] as ssubs, somefield }'
-  // , 'abc { def as def2, a as a2, (df3) as asdf0 }'
+  , 'asdfa { [sub(a.id)] as ssubs, somefield }'
+  , 'abc { def as def2, a as a2, (df3) as asdf0 }'
   , 'table { regular, field, [ab], [som]s \
             abc as f on f { } a_join { }, \
             another_query { } \
