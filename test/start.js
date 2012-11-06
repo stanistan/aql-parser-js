@@ -1,16 +1,16 @@
 var parser = require('./../src/aql.js').parser;
 
 var tests = [
-    // 'abc { def, another }'
-  // , 'abc { def as something } '
-  // , 'abc as def { something }'
-  // , 'abc on something { fra }'
-  // , 'abc { def } table2 { content }'
+    'abc { def, another }'
+  , 'abc { def as something } '
+  , 'abc as def { something }'
+  , 'abc on something { fra }'
+  , 'abc { def } table2 { content }'
   // , 'asdfa { [sub(a.id)] as ssubs, somefield }'
-  // , 'abc { def as def2, a as a2, (df3) as asdf0 }'
+  , 'abc { def as def2, a as a2, (df3) as asdf0 }'
   // , 'table { regular, field, [ab], [som]s, abc on smoe {} q2 { field }, another { } }'
   // , 't { subt { field } }'
-  , 't { where id = 1 order by name asc, b desc }'
+  , 't { where id = 1 order by name asc, b desc, c }'
   // , ' t as table { \
   //         some_field, \
   //         "a string" as "another string" \
@@ -31,7 +31,7 @@ var tests = [
   //       artist_id,\
   //       account_id\
   //     }'
-  // , 'table { a - b as difference } '
+  , 'table { a - b as difference } '
 ];
 
 var t = function(text) {
