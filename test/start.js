@@ -37,6 +37,8 @@ var tests = [
         account_id\
       }'
   , 'table { a - b as difference } '
+  , 'table { \
+      where active = 1 and (name like \'something\' or age = 20) or id in (somethingelse {}) }'
 ];
 
 var t = function(text) {

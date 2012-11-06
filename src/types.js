@@ -13,6 +13,25 @@ var Expr = inherit('Expr', Sel, function(value, alias) {
   this.alias = alias || '';
 });
 
+var FnExpr = inherit('FnExpr', Expr, function(name, args) {
+  this.name = name;
+  this.args = args;
+});
+
+var ArithExpr = inherit('ArithExpr', Expr, function(op, left, right) {
+  this.operation = op;
+  this.left = left;
+  this.right = right;
+});
+
+var CombExpr = inherit('CombExpr', Expr, function(op, left, right) {
+  ArithExpr.call(this, op, left, right);
+});
+
+var EqExpr = inherit('EqExpr', Expr, function(op, left, right) {
+  ArithExpr.call(this, op, left, right);
+});
+
 var Field = inherit('Field', Sel, function(name, alias) {
   this.name = name;
   this.alias = alias || '';
@@ -65,6 +84,10 @@ var types = {
   , Table: Table
   , Expr: Expr
   , Sel: Sel
+  , FnExpr: FnExpr
+  , ArithExpr: ArithExpr
+  , CombExpr: CombExpr
+  , EqExpr: EqExpr
 };
 
 // and out.

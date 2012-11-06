@@ -191,21 +191,21 @@ es
   ;
 
 e
-  : literal -> $1
-  | VAR -> $1
-  | DOTTED_VAR -> $1
-  | LPAREN es RPAREN { $$ = [$1, $2, $3]; }
-  | VAR LPAREN es RPAREN { $$ = [$1, $2, $3]; }
-  | e MINUS e { $$ = [$1, $2, $3]; }
-  | e PLUS e { $$ = [$1, $2, $3]; }
-  | e STAR e { $$ = [$1, $2, $3]; }
-  | e DIV e { $$ = [$1, $2, $3]; }
-  | e AND e { $$ = [$1, $2, $3]; }
-  | e OR e { $$ = [$1, $2, $3]; }
-  | e ILIKE e { $$ = [$1, $2, $3]; }
-  | e LIKE e { $$ = [$1, $2, $3]; }
-  | e EQ e { $$ = [$1, $2, $3]; }
-  | e IN e { $$ = [$1, $2, $3]; }
+  : literal               -> $1
+  | VAR                   -> $1
+  | DOTTED_VAR            -> $1
+  | LPAREN es RPAREN      -> $2
+  | VAR LPAREN es RPAREN  -> new t.FnExpr($1, $es)
+  | e MINUS e             -> new t.ArithExpr('-', $1, $3)
+  | e PLUS e              -> new t.ArithExpr('+', $1, $3)
+  | e STAR e              -> new t.ArithExpr('*', $1, $3)
+  | e DIV e               -> new t.ArithExpr('/', $1, $3)
+  | e AND e               -> new t.CombExpr('AND', $1, $3)
+  | e OR e                -> new t.CombExpr('OR', $1, $3)
+  | e ILIKE e             -> new t.CombExpr('ILIKE', $1, $3)
+  | e LIKE e              -> new t.CombExpr('LIKE', $1, $3)
+  | e EQ e                -> new t.CombExpr('EQ', $1, $3)
+  | e IN e                -> new t.CombExpr('IN', $1, $3)
   ;
 
 clauses
