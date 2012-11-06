@@ -117,6 +117,7 @@ body
     { $$ = { selects: [],  clauses: $clauses }; }
   | fields
     { $$ = { selects: $fields,  clauses: [] }; }
+  | . { $$ = {}; }
   ;
 
 clauses
