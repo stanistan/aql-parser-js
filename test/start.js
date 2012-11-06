@@ -12,7 +12,7 @@ var tests = [
   //           abc as f on f { } a_join { }, \
   //           another_query { } \
   //           where id = 10}'
-  , 't { * subt { field } }'
+  , 't {  * subt on thing { field } }'
   // , 't { where id = 1 order by name asc, b desc, c }'
   // , ' t as table { \
   //         some_field, \

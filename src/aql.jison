@@ -2,7 +2,14 @@
 
 /* AQL Grammar */
 
-var t = require('./types');
+var t = require('./types')
+  , _ = require('underscore');
+
+function makeBody() {
+  var args = [].slice.call(arguments)
+    , defs = { selects: [], posts: [], clauses: [] };
+  return _.extend.apply(null, args);
+}
 
 %}
 
@@ -126,16 +133,19 @@ table_decl
   ;
 
 body
-  : fields queries clauses
-    { $$ = { selects: $fields, posts: $queries, clauses: $clauses }; }
-  | fields queries
-    { $$ = { selects: $fields, posts: $queries, clauses: [] }; }
-  | fields
-    { $$ = { selects: $fields,  clauses: [] }; }
-  | fields clauses
-    { $$ = { selects: $fields,  clauses: $clauses }; }
+  : fields_or_queries clauses
+    { $$ = makeBody($1, { clauses: $2 }); }
+  | fields_or_queries
+    { $$ = makeBody($1); }
   | clauses
-    { $$ = { selects: [],  clauses: $clauses }; }
+    { $$ = makeBody({ clauses: $1 }); }
+  ;
+
+fields_or_queries
+  : fields queries
+    { $$ = { selects: $fields, posts: $queries }; }
+  | fields
+    { $$ = { selects: $fields }; }
   ;
 
 fields
