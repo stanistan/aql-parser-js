@@ -58,7 +58,7 @@
 
 %left MINUS PLUS
 %left STAR DIV
-%left AND OR
+%left AND OR IN
 %left EQ LIKE ILIKE
 %left LPAREN
 %left VAR
@@ -70,7 +70,6 @@
 %left ORDER_BY
 %left LIMIT
 %left OFFSET
-
 
 %start statement
 
@@ -223,11 +222,11 @@ e
   | e ILIKE e { $$ = [$1, $2, $3]; }
   | e LIKE e { $$ = [$1, $2, $3]; }
   | e EQ e { $$ = [$1, $2, $3]; }
-  | VAR LPAREN es RPAREN { $$ = [$1, $2, $3, $4]; }
+  | e IN e { $$ = [$1, $2, $3]; }
   ;
 
 es
-  : e es { $$ = [$1, $2]; }
+  : e COMMA es { $$ = [$1].concat($3); }
   | e { $$ = [$1]; }
   | STAR { $$ = [$1]; }
   ;
