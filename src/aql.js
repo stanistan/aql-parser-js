@@ -1,5 +1,5 @@
 /* Jison generated parser */
-var parser = (function(){
+var aql = (function(){
 var parser = {trace: function trace() { },
 yy: {},
 symbols_: {"error":2,"statement":3,"query":4,"EOF":5,"table_defs":6,"table_def":7,"table_decl":8,"LBR":9,"body":10,"RBR":11,"VAR":12,"AS":13,"ON":14,"e":15,"expr":16,"fields":17,"clauses":18,"where":19,"group_by":20,"having":21,"order_by":22,"limit":23,"offset":24,"WHERE":25,"WHITESPACE":26,"GROUP_BY":27,"by_es":28,"HAVING":29,"ORDER_BY":30,"LIMIT":31,"OFFSET":32,"field":33,"COMMA":34,"alias":35,"literal":36,"STRING_LITERAL_S":37,"STRING_LITERAL_D":38,"NUM":39,"by_e":40,"ORD":41,"DOTTED_VAR":42,"LPAREN":43,"RPAREN":44,"MINUS":45,"PLUS":46,"STAR":47,"DIV":48,"AND":49,"OR":50,"ILIKE":51,"LIKE":52,"EQ":53,"es":54,"$accept":0,"$end":1},
@@ -501,9 +501,9 @@ function Parser () { this.yy = {}; }Parser.prototype = parser;parser.Parser = Pa
 return new Parser;
 })();
 if (typeof require !== 'undefined' && typeof exports !== 'undefined') {
-exports.parser = parser;
-exports.Parser = parser.Parser;
-exports.parse = function () { return parser.parse.apply(parser, arguments); }
+exports.parser = aql;
+exports.Parser = aql.Parser;
+exports.parse = function () { return aql.parse.apply(aql, arguments); }
 exports.main = function commonjsMain(args) {
     if (!args[1])
         throw new Error('Usage: '+args[0]+' FILE');
