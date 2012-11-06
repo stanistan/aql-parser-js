@@ -316,8 +316,26 @@ fields
   ;
 
 field
-  : e AS alias { $$ = {field: $e, alias: $alias}; }
-  | e { $$ = {field: $e}; }
+  : e AS alias { $$ = new t.Field($e, $alias); }
+  | e { $$ = new t.Field($e); }
+  | ref { $$ = $ref; }
+  | ref AS alias { $ref.alias = $alias; $$ = $ref; }
+  ;
+
+or_dotted
+  : DOTTED_VAR { $$ = $1; }
+  | VAR { $$ = $1; }
+  ;
+
+ref
+  : LBRACKET VAR LPAREN or_dotted RPAREN RBRACKET_PL
+    { $$ = new t.PluralRef($2, $4); }
+  | LBRACKET VAR RBRACKET_PL
+    { $$ = new t.PluralRef($2, null); }
+  | LBRACKET VAR LPAREN or_dotted RPAREN RBRACKET
+    { $$ = new t.SingleRef($2, $4); }
+  | LBRACKET VAR RBRACKET
+    { $$ = new t.SingleRef($2); }
   ;
 
 alias

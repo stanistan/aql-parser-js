@@ -21,17 +21,17 @@ var tests = [
   //         offset 100  \
   //     }'
   // , 'table { where id in (another { id }) }'
-  // , ' artist {\
-  //       artist_type_id,\
-  //       name,\
-  //       bio,\
-  //       [artist_genre(asdf)]s\
-  //     }\
-  //     account_artist as act {\
-  //       artist_id,\
-  //       account_id\
-  //     }'
-  , 'table { a - b as difference } '
+  , ' artist {\
+        artist_type_id,\
+        name,\
+        bio,\
+        [artist_genre(asdf)]s\
+      }\
+      account_artist as act {\
+        artist_id,\
+        account_id\
+      }'
+  // , 'table { a - b as difference } '
 ];
 
 var t = function(text) {
