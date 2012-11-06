@@ -211,6 +211,7 @@ e
   | VAR { $$ = $1; }
   | DOTTED_VAR { $$ = $1; }
   | LPAREN es RPAREN { $$ = [$1, $2, $3]; }
+  | VAR LPAREN es RPAREN { $$ = [$1, $2, $3]; }
   | e MINUS e { $$ = [$1, $2, $3]; }
   | e PLUS e { $$ = [$1, $2, $3]; }
   | e STAR e { $$ = [$1, $2, $3]; }

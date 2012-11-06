@@ -13,6 +13,7 @@ var tests = [
   //           another_query { } \
   //           where id = 10}'
   , 't {  * subt on thing { field } }'
+  // , 'something { count(*) }'
   // , 't { where id = 1 order by name asc, b desc, c }'
   // , ' t as table { \
   //         some_field, \
