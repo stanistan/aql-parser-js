@@ -1,8 +1,18 @@
+%{
+
 /* AQL Grammar */
+
+var t = require('./types');
+
+%}
 
 %lex
 
 %options flex case-insensitive
+
+tt  [a-zA-Z][\w_]*
+dg  [0-9]
+dgd [0-9.]
 
 %%
 
@@ -46,10 +56,10 @@
 "offset"                  { return 'OFFSET'; }
 "having"                  { return 'HAVING'; }
 
-[a-zA-Z][\w_]*"."[a-zA-Z][\w_]* { return 'DOTTED_VAR'; }
-[a-zA-Z][\w_]*            { return 'VAR'; }
+{tt}"."{tt}               { return 'DOTTED_VAR'; }
+{tt}                      { return 'VAR'; }
 
-[0-9][0-9.]*              { return 'NUM'; }
+{dg}{dgd}*                { return 'NUM'; }
 
 \s+                       { /* */  }
 
@@ -60,12 +70,10 @@
 %left STAR DIV
 %left AND OR
 %left EQ LIKE ILIKE IN
-%left LPAREN
-%left VAR AS
-%left COMMA
-%left RBR
 
 %start statement
+
+%ebnf
 
 %%
 
@@ -77,6 +85,11 @@ statement
 query
   : table_defs
     { $$ = new t.Query($table_defs); }
+  ;
+
+queries
+  : query COMMA queries { $$ = [$1].concat($3); }
+  | query { $$ = [$1]; }
   ;
 
 table_defs
@@ -97,27 +110,107 @@ table_def
         , $table_decl
       );
     }
+  | table_decl LBR RBR
+    { $$ = new t.Table($table_decl.name, [], [], [], $table_decl); }
   ;
 
 table_decl
   : VAR AS VAR ON e
-    %{ $$ = { name: $1, alias: $3, join: $e }; %}
+    { $$ = { name: $1, alias: $3, join: $e }; }
   | VAR ON e
-    %{ $$ = { name: $1, join: $e }; %}
+    { $$ = { name: $1, join: $e }; }
   | VAR AS VAR
-    %{ $$ = { name: $1, alias: $3 }; %}
+    { $$ = { name: $1, alias: $3 }; }
   | VAR
-    %{ $$ = { name: $1 }; %}
+    { $$ = { name: $1 }; }
   ;
 
 body
-  : fields clauses
+  : fields queries clauses
+    { $$ = { selects: $fields, posts: $queries, clauses: $clauses }; }
+  | fields queries
+    { $$ = { selects: $fields, posts: $queries, clauses: [] }; }
+  | fields
+    { $$ = { selects: $fields,  clauses: [] }; }
+  | fields clauses
     { $$ = { selects: $fields,  clauses: $clauses }; }
   | clauses
     { $$ = { selects: [],  clauses: $clauses }; }
-  | fields
-    { $$ = { selects: $fields,  clauses: [] }; }
-  | . { $$ = {}; }
+  ;
+
+fields
+  : field COMMA fields
+    { $$ = [$1].concat($3); }
+  | field
+    { $$ = [$1]; }
+  ;
+
+field
+  : e AS alias { $$ = new t.Field($e, $alias); }
+  | e { $$ = new t.Field($e); }
+  | ref { $$ = $ref; }
+  | ref AS alias { $ref.alias = $alias; $$ = $ref; }
+  | STAR { $$ = '*'; }
+  ;
+
+or_dotted
+  : DOTTED_VAR { $$ = $1; }
+  | VAR { $$ = $1; }
+  ;
+
+ref
+  : LBRACKET VAR LPAREN or_dotted RPAREN RBRACKET_PL
+    { $$ = new t.PluralRef($2, $4); }
+  | LBRACKET VAR RBRACKET_PL
+    { $$ = new t.PluralRef($2, null); }
+  | LBRACKET VAR LPAREN or_dotted RPAREN RBRACKET
+    { $$ = new t.SingleRef($2, $4); }
+  | LBRACKET VAR RBRACKET
+    { $$ = new t.SingleRef($2); }
+  ;
+
+alias
+  : literal { $$ = $1; }
+  | VAR { $$ = $1; }
+  ;
+
+literal
+  : STRING_LITERAL_S { $$ = $1; }
+  | STRING_LITERAL_D { $$ = $1; }
+  | NUM { $$ = parseFloat($1, 10); }
+  ;
+
+by_e
+  : e ORD { $$ = [$1, $2]; }
+  | e { $$ = [$1]; }
+  ;
+
+by_es
+  : by_e COMMA by_es { $$ = [$1].concat($3); }
+  | by_e { $$ = [$1]; }
+  ;
+
+es
+  : e COMMA es { $$ = [$1].concat($3); }
+  | e { $$ = [$1]; }
+  | STAR { $$ = [$1]; }
+  ;
+
+e
+  : literal { $$ = $1; }
+  | VAR { $$ = $1; }
+  | DOTTED_VAR { $$ = $1; }
+  | LPAREN es RPAREN { $$ = [$1, $2, $3]; }
+  | e MINUS e { $$ = [$1, $2, $3]; }
+  | e PLUS e { $$ = [$1, $2, $3]; }
+  | e STAR e { $$ = [$1, $2, $3]; }
+  | e DIV e { $$ = [$1, $2, $3]; }
+  | e AND e { $$ = [$1, $2, $3]; }
+  | e OR e { $$ = [$1, $2, $3]; }
+  | e ILIKE e { $$ = [$1, $2, $3]; }
+  | e LIKE e { $$ = [$1, $2, $3]; }
+  | e EQ e { $$ = [$1, $2, $3]; }
+  | e IN e { $$ = [$1, $2, $3]; }
   ;
 
 clauses
@@ -309,80 +402,4 @@ offset
     { $$ = $2; }
   ;
 
-fields
-  : field COMMA fields
-    { $$ = [$1].concat($3); }
-  | field
-    { $$ = [$1]; }
-  ;
-
-field
-  : e AS alias { $$ = new t.Field($e, $alias); }
-  | e { $$ = new t.Field($e); }
-  | ref { $$ = $ref; }
-  | ref AS alias { $ref.alias = $alias; $$ = $ref; }
-  ;
-
-or_dotted
-  : DOTTED_VAR { $$ = $1; }
-  | VAR { $$ = $1; }
-  ;
-
-ref
-  : LBRACKET VAR LPAREN or_dotted RPAREN RBRACKET_PL
-    { $$ = new t.PluralRef($2, $4); }
-  | LBRACKET VAR RBRACKET_PL
-    { $$ = new t.PluralRef($2, null); }
-  | LBRACKET VAR LPAREN or_dotted RPAREN RBRACKET
-    { $$ = new t.SingleRef($2, $4); }
-  | LBRACKET VAR RBRACKET
-    { $$ = new t.SingleRef($2); }
-  ;
-
-alias
-  : literal { $$ = $1; }
-  | VAR { $$ = $1; }
-  ;
-
-literal
-  : STRING_LITERAL_S { $$ = $1; }
-  | STRING_LITERAL_D { $$ = $1; }
-  | NUM { $$ = parseFloat($1, 10); }
-  ;
-
-by_e
-  : e ORD { $$ = [$1, $2]; }
-  | e { $$ = [$1]; }
-  ;
-
-by_es
-  : by_e COMMA by_es { $$ = [$1].concat($3); }
-  | by_e { $$ = [$1]; }
-  ;
-
-e
-  : literal { $$ = $1; }
-  | VAR { $$ = $1; }
-  | DOTTED_VAR { $$ = $1; }
-  | LPAREN es RPAREN { $$ = [$1, $2, $3]; }
-  | e MINUS e { $$ = [$1, $2, $3]; }
-  | e PLUS e { $$ = [$1, $2, $3]; }
-  | e STAR e { $$ = [$1, $2, $3]; }
-  | e DIV e { $$ = [$1, $2, $3]; }
-  | e AND e { $$ = [$1, $2, $3]; }
-  | e OR e { $$ = [$1, $2, $3]; }
-  | e ILIKE e { $$ = [$1, $2, $3]; }
-  | e LIKE e { $$ = [$1, $2, $3]; }
-  | e EQ e { $$ = [$1, $2, $3]; }
-  | e IN e { $$ = [$1, $2, $3]; }
-  ;
-
-es
-  : e COMMA es { $$ = [$1].concat($3); }
-  | e { $$ = [$1]; }
-  | STAR { $$ = [$1]; }
-  ;
-
 %%
-
-var t = require('./types');
