@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-clear && node node_modules/.bin/jison src/aql.jison >> /dev/null \
+clear && node node_modules/.bin/jison src/aql.jison src/aql.jisonlex >> /dev/null \
     && mv aql.js src/aql.js \
     && node test/start.js \
     && rm src/aql.js
