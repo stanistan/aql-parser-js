@@ -83,7 +83,7 @@ field
   | e -> new t.Field($e)
   | ref -> $ref
   | ref AS alias { $ref.alias = $alias; $$ = $ref; }
-  | STAR -> '*'
+  | STAR -> new t.Token('*')
   ;
 
 ref
@@ -98,19 +98,19 @@ ref
   ;
 
 or_dotted
-  : DOTTED_VAR -> $1
-  | VAR -> $1
+  : DOTTED_VAR -> new t.Token($1)
+  | VAR -> new t.Token($1)
   ;
 
 alias
   : literal -> $1
-  | VAR -> $1
+  | VAR -> new t.Token($1)
   ;
 
 literal
-  : STRING_LITERAL_S -> $1
-  | STRING_LITERAL_D -> $1
-  | NUM -> parseFloat($1, 10)
+  : STRING_LITERAL_S  -> new t.LitToken($1)
+  | STRING_LITERAL_D  -> new t.LitToken($1)
+  | NUM               -> new t.LitToken(parseFloat($1, 10))
   ;
 
 by_e
@@ -126,7 +126,7 @@ by_es
 es
   : e COMMA es -> [$1].concat($3)
   | e -> [$1]
-  | STAR -> [$1]
+  | STAR -> [new t.StarToken()]
   | query -> [$1]
   ;
 
