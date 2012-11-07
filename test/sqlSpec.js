@@ -8,7 +8,7 @@ var parser = require('./../src/parser')
 
 var query = 'table as fre { \
   a - b as difference, "something" as aliased \
-  where id = 1 and thing is false \
+  where id = 1 and (thing = 0 or thing is null) \
  } ';
 var re = parse(query);
 console.log(JSON.stringify(re, null, 2));

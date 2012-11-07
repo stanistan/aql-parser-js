@@ -29,9 +29,7 @@ var StarToken = inherit('StarToken', Token, null
   , { getSQL: function() { return '*'; } }
 );
 
-var BoolToken = inherit('BoolToken', Token, null
-  , { getSQL: function() { return this.value; } }
-);
+var BoolToken = inherit('BoolToken', LitToken);
 
 var NullToken = inherit('NullToken', Token, null
   , { getSQL: function() { return 'NULL'; } }
