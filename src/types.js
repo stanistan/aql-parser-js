@@ -35,19 +35,15 @@ var FnExpr = inherit('FnExpr', Expr, function(name, args) {
   this.args = args;
 });
 
-var ArithExpr = inherit('ArithExpr', Expr, function(op, left, right) {
+var ExprExpr = inherit('ExprExpr', Expr, function(op, left, right) {
   this.operation = op;
   this.left = left;
   this.right = right;
 });
 
-var CombExpr = inherit('CombExpr', Expr, function(op, left, right) {
-  ArithExpr.call(this, op, left, right);
-});
-
-var EqExpr = inherit('EqExpr', Expr, function(op, left, right) {
-  ArithExpr.call(this, op, left, right);
-});
+var ArithExpr = inherit('ArithExpr', ExprExpr);
+var CombExpr = inherit('CombExpr', ExprExpr);
+var EqExpr = inherit('EqExpr', ExprExpr);
 
 var Field = inherit('Field', Sel, function(name, alias) {
   this.name = name;
@@ -59,17 +55,14 @@ var Ref = inherit('Ref', Sel, function(name, id) {
   this.id = id || null;
 });
 
-var SingleRef = inherit('SingleRef', Ref, function(name, id) {
-  Ref.call(this, name, id);
-});
+var SingleRef = inherit('SingleRef', Ref);
+var PluralRef = inherit('PluralRef', Ref);
 
-var PluralRef = inherit('PluralRef', Ref, function(name, id) {
-  Ref.call(this, name, id);
-});
-
-var Query = inherit('Query', Sel, function(tables) {
-  this.tables = tables || [];
-});
+var Query = inherit('Query', Sel
+  , function(tables) {
+      this.tables = tables || [];
+    }
+);
 
 var Table = inherit('Table', Type, function(name, selects, clauses, post, extra) {
   var t = this;
@@ -88,7 +81,7 @@ var Table = inherit('Table', Type, function(name, selects, clauses, post, extra)
   _.each(extra || {}, function(v, n) { t[n] = v; });
 });
 
-var isType = function(t) {
+function isType(t) {
   return t && _.isObject(t) && t instanceof Type;
 };
 

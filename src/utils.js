@@ -6,16 +6,26 @@ var pos = toObjectPrefix(['s', 'n'], '-__');
 
 function inherit(n, from, f, methods) {
 
+  // defaults
   methods = methods || {};
-  from = (function(f) {
-    return _.isFunction(f) ? new f() : f;
-  }(from || function() { }));
+  from = from || function() { };
 
   if (!_.isFunction(f)) {
-    throw "cannot inherit to a non-function.";
+
+    if (!_.isFunction(from)) {
+      throw "cannot inherit to a non-function.";
+    }
+
+    // use the parent constructor
+    f = function() {
+      from.apply(this, [].slice.call(arguments));
+    };
+
   }
 
-  if (!_.isObject(from)) {
+  var cont = _.isFunction(from) ? new from() : f;
+
+  if (!_.isObject(cont)) {
     throw "cannot inherit from a non object.";
   }
 
@@ -25,12 +35,12 @@ function inherit(n, from, f, methods) {
 
   var to = _.bind(toProto, null, f);
 
-  f.prototype = from;
+  f.prototype = cont;
   f.prototype.constructor = f;
   _.each(methods, to);
 
   f.prototype[pos.n] = n;
-  f.prototype[pos.s] = from;
+  f.prototype[pos.s] = cont;
 
   return f;
 }
