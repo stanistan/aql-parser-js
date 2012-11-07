@@ -64,22 +64,18 @@ var Query = inherit('Query', Sel
     }
 );
 
-var Table = inherit('Table', Type, function(name, selects, clauses, post, extra) {
-  var t = this;
-
-  if (!name) {
-    throw "table must have a name.";
-  }
-
-  this.name = name;
-  this.alias = '';
-  this.join = '';
-  this.selects = selects || [];
-  this.clauses = clauses || [];
-  this.post = post || [];
-
-  _.each(extra || {}, function(v, n) { t[n] = v; });
-});
+var Table = inherit('Table', Type
+  , function(name, selects, clauses, post, extra) {
+      this.name = name;
+      this.alias = '';
+      this.join = '';
+      this.selects = selects || [];
+      this.clauses = clauses || [];
+      this.post = post || [];
+      this.merge(extra || {});
+    }
+  , { }
+);
 
 function isType(t) {
   return t && _.isObject(t) && t instanceof Type;

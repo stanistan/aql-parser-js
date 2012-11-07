@@ -47,11 +47,22 @@ function inherit(n, from, f, methods) {
 
 var Type = inherit('Type', {}
   , function() { }
-  , {   isa: function(t) { return this instanceof t; }
-      , getTypeName: function() { return this[pos.n]; }
-      , toString: function() { return '[' + this.getTypeName() + ']'; }
-      , toJSON: function() { return _.extend(this, { type: this.getTypeName() }); } }
+  , {   getTypeName: function() { return this[pos.n]; }
+      , isa: function(t) { return this instanceof t; }
+      , merge: function(o) { mergeToObject(this, o); }
+      , toJSON: function() { return _.extend(this, { type: this.getTypeName() }); }
+      , toString: function() { return '[' + this.getTypeName() + ']'; } }
 );
+
+function mergeToObject(o, things) {
+  _.each(things, attachTo(o));
+}
+
+function attachTo(o) {
+  return function(value, n) {
+    o[n] = value;
+  };
+}
 
 function toProto(o, fn, name) {
   o.prototype[name] = fn;
