@@ -15,7 +15,7 @@ function makeBody() {
 
 %left MINUS PLUS
 %left STAR DIV
-%left AND OR
+%right OR AND
 %left EQ LIKE ILIKE IN GTE GT LTE LT IS
 %left NOT
 %left VAR AS ON
