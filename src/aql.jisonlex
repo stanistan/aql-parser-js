@@ -22,7 +22,7 @@ dgd [0-9.]
 ","                       return 'COMMA';
 "~"                       return 'TILDE';
 
-("true"|"flase")          return 'BOOL';
+("true"|"false")          return 'BOOL';
 "null"                    return 'NULL';
 "not"                     return "NOT";
 
