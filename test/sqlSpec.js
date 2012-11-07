@@ -6,11 +6,10 @@ var parser = require('./../src/parser')
       return parser.parse(text);
     };
 
-var query = 'table { \
+var query = 'table as fre { \
   a - b as difference, "something" as aliased \
-  where id = 1 \
- } \
- table2 on table.id = table_id { field where id in (t { count(*) }) }';
+  where id = 1 and thing is false \
+ } ';
 var re = parse(query);
 console.log(JSON.stringify(re, null, 2));
 console.log(query);

@@ -29,7 +29,9 @@ var StarToken = inherit('StarToken', Token, null
   , { getSQL: function() { return '*'; } }
 );
 
-var BoolToken = inherit('BoolToken', Token);
+var BoolToken = inherit('BoolToken', Token, null
+  , { getSQL: function() { return this.value; } }
+);
 
 var NullToken = inherit('NullToken', Token, null
   , { getSQL: function() { return 'NULL'; } }
@@ -91,7 +93,7 @@ var Field = inherit('Field', Sel
       this.alias = alias || '';
     }
   , {   getSQL: function(table) {
-          var extra = this.alias ? ' as ' + this.alias : '';
+          var extra = this.alias ? ' as ' + this.alias.value : '';
           return getSQL(table, this.name) + extra;
         }
     }
