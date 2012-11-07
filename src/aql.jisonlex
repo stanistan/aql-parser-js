@@ -22,16 +22,25 @@ dgd [0-9.]
 ","                       return 'COMMA';
 "~"                       return 'TILDE';
 
+("true"|"flase")          return 'BOOL';
+"null"                    return 'NULL';
+"not"                     return "NOT";
+
 "*"                       return 'STAR';
 "-"                       return 'MINUS';
 "+"                       return 'PLUS';
 "/"                       return 'DIV';
 
 "in"                      return 'IN';
+">="                      return 'GTE';
+"<="                      return 'LTE';
+">"                       return 'GT';
+"<"                       return 'LT';
 "="                       return 'EQ';
 "like"                    return 'LIKE';
 "ilike"                   return 'ILIKE';
 "and"                     return 'AND';
+"is"                      return 'IS';
 "or"                      return 'OR';
 
 "as"                      return 'AS';

@@ -16,7 +16,8 @@ function makeBody() {
 %left MINUS PLUS
 %left STAR DIV
 %left AND OR
-%left EQ LIKE ILIKE IN
+%left EQ LIKE ILIKE IN GTE GT LTE LT IS
+%left NOT
 %left VAR AS ON
 
 %start statement
@@ -131,9 +132,12 @@ es
 
 e
   : literal               -> $1
-  | VAR                   -> $1
-  | DOTTED_VAR            -> $1
+  | VAR                   -> new t.Token($1)
+  | DOTTED_VAR            -> new t.Token($1)
+  | BOOL                  -> new t.BoolToken($1)
+  | NULL                  -> new t.NullToken()
   | LPAREN es RPAREN      -> $2
+  | NOT e                 -> new t.NegExpr($2)
   | VAR LPAREN es RPAREN  -> new t.FnExpr($1, $es)
   | e MINUS e             -> new t.ArithExpr('-', $1, $3)
   | e PLUS e              -> new t.ArithExpr('+', $1, $3)
@@ -141,10 +145,15 @@ e
   | e DIV e               -> new t.ArithExpr('/', $1, $3)
   | e AND e               -> new t.CombExpr('AND', $1, $3)
   | e OR e                -> new t.CombExpr('OR', $1, $3)
-  | e ILIKE e             -> new t.CombExpr('ILIKE', $1, $3)
-  | e LIKE e              -> new t.CombExpr('LIKE', $1, $3)
-  | e EQ e                -> new t.CombExpr('EQ', $1, $3)
-  | e IN e                -> new t.CombExpr('IN', $1, $3)
+  | e ILIKE e             -> new t.EqExpr('ILIKE', $1, $3)
+  | e LIKE e              -> new t.EqExpr('LIKE', $1, $3)
+  | e EQ e                -> new t.EqExpr($2, $1, $3)
+  | e GTE e               -> new t.EqExpr($2, $1, $3)
+  | e LTE e               -> new t.EqExpr($2, $1, $3)
+  | e GT e                -> new t.EqExpr($2, $1, $3)
+  | e LT e                -> new t.EqExpr($2, $1, $3)
+  | e IS e                -> new t.EqExpr($2, $1, $3)
+  | e IN e                -> new t.EqExpr($2, $1, $3)
   ;
 
 clauses

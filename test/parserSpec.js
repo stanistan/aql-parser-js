@@ -47,9 +47,16 @@ parsed.forEach(function(re, k) {
 
     var s = a.selects[0];
 
-    it('should have a first field name equal to field', function() {
+    it('should be a Field type', function() {
       expect(s.isa(t.Field)).toBe(true);
-      expect(s.name).toEqual('field');
+    });
+
+    it('should contain a Token as a name', function() {
+      expect(s.name.isa(t.Token)).toBe(true);
+    });
+
+    it('that token should have a value', function() {
+      expect(s.name.value).toEqual('field');
     });
 
   });

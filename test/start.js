@@ -39,6 +39,7 @@ var tests = [
   , 'table { a - b as difference } '
   , 'table { \
       where active = 1 and (name like \'something\' or age = 20) or id in (somethingelse {}) }'
+  , 'table { where id > 10 and id is not null }'
 ];
 
 var t = function(text) {

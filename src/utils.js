@@ -35,24 +35,12 @@ function inherit(n, from, f, methods) {
   return f;
 }
 
-var Type = inherit(
-    'Type'
-  , {}
+var Type = inherit('Type', {}
   , function() { }
-  , {
-        isa: function(t) {
-          return this instanceof t;
-        }
-      , getTypeName: function() {
-          return this[pos.n];
-        }
-      , toString: function() {
-          return '[' + this.getTypeName() + ']';
-        }
-      , toJSON: function() {
-          return _.extend(this, {type: this.getTypeName() });
-        }
-    }
+  , {   isa: function(t) { return this instanceof t; }
+      , getTypeName: function() { return this[pos.n]; }
+      , toString: function() { return '[' + this.getTypeName() + ']'; }
+      , toJSON: function() { return _.extend(this, { type: this.getTypeName() }); } }
 );
 
 function toProto(o, fn, name) {

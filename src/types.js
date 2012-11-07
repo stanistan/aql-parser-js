@@ -4,6 +4,19 @@ var _ = require('underscore')
   , inherit = u.inherit
   , Type = u.Type;
 
+var Token = inherit('Token', Type
+  , function(n) { this.value = n; }
+  , { toJSON: function() { return this.value; } }
+);
+
+var BoolToken = inherit('BoolToken', Token, function(n) {
+  Token.call(this, n);
+});
+
+var NullToken = inherit('NullToken', Token, function() {
+  this.value = "NULL";
+});
+
 var Sel = inherit('Sel', Type, function() {
   this.alias = '';
 });
@@ -11,6 +24,10 @@ var Sel = inherit('Sel', Type, function() {
 var Expr = inherit('Expr', Sel, function(value, alias) {
   this.value = value;
   this.alias = alias || '';
+});
+
+var NegExpr = inherit('NegExpr', Expr, function(value) {
+  this.value = value;
 });
 
 var FnExpr = inherit('FnExpr', Expr, function(name, args) {
@@ -76,7 +93,8 @@ var isType = function(t) {
 };
 
 var types = {
-    Field: Field
+    Token: Token
+  , Field: Field
   , Ref: Ref
   , SingleRef: SingleRef
   , PluralRef: PluralRef
@@ -88,6 +106,9 @@ var types = {
   , ArithExpr: ArithExpr
   , CombExpr: CombExpr
   , EqExpr: EqExpr
+  , NegExpr: NegExpr
+  , BoolToken: BoolToken
+  , NullToken: NullToken
 };
 
 // and out.
