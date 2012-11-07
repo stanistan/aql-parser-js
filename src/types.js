@@ -66,15 +66,16 @@ var Query = inherit('Query', Sel
 
 var Table = inherit('Table', Type
   , function(name, selects, clauses, post, extra) {
-      this.name = name;
-      this.alias = '';
-      this.join = '';
-      this.selects = selects || [];
-      this.clauses = clauses || [];
-      this.post = post || [];
-      this.merge(extra || {});
+      this.merge(_.extend(
+          {   name: name
+            , alias: null
+            , join: null
+            , selects: selects || []
+            , post: post || []
+            , clauses: clauses || [] }
+        , extra || {}
+      ));
     }
-  , { }
 );
 
 function isType(t) {
