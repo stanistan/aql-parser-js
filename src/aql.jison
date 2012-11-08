@@ -157,186 +157,41 @@ e
   ;
 
 clauses
-  : where group_by having order_by limit offset
-    { $$ = { where: $where
-           , group_by: $group_by
-           , having: $having
-           , order_by: $order_by
-           , limit: $limit
-           , offset: $offset }; }
-  | where group_by having order_by limit
-    { $$ = { where: $where
-           , group_by: $group_by
-           , having: $having
-           , order_by: $order_by
-           , limit: $limit }; }
-  | where group_by having order_by
-    { $$ = { where: $where
-           , group_by: $group_by
-           , having: $having
-           , order_by: $order_by }; }
-  | where group_by having
-    { $$ = { where: $where
-           , group_by: $group_by
-           , having: $having }; }
-  | where group_by
-    { $$ = { where: $where
-           , group_by: $group_by }; }
-  | where
-    { $$ = { where: $where }; }
-  | where having order_by limit offset
-    { $$ = { where: $where
-           , having: $having
-           , order_by: $order_by
-           , limit: $limit
-           , offset: $offset }; }
-  | where having order_by limit
-    { $$ = { where: $where
-           , having: $having
-           , order_by: $order_by
-           , limit: $limit }; }
-  | where having order_by
-    { $$ = { where: $where
-           , having: $having
-           , order_by: $order_by }; }
-  | where having
-    { $$ = { where: $where
-           , having: $having }; }
-  | where order_by limit offset
-    { $$ = { where: $where
-           , order_by: $order_by
-           , limit: $limit
-           , offset: $offset }; }
-  | where order_by limit
-    { $$ = { where: $where
-           , order_by: $order_by
-           , limit: $limit }; }
-  | where order_by offset
-    { $$ = { where: $where
-           , order_by: $order_by
-           , offset: $offset }; }
-  | where order_by
-    { $$ = { where: $where
-           , order_by: $order_by }; }
-  | where limit offset
-    { $$ = { where: $where
-           , limit: $limit
-           , offset: $offset }; }
-  | where limit
-    { $$ = { where: $where
-           , limit: $limit }; }
-  | where offset
-    { $$ = { where: $where
-           , offset: $offset }; }
-  | group_by having order_by limit offset
-    { $$ = { group_by: $group_by
-           , having: $having
-           , order_by: $order_by
-           , limit: $limit
-           , offset: $offset }; }
-  | group_by having order_by limit
-    { $$ = { group_by: $group_by
-           , having: $having
-           , order_by: $order_by
-           , limit: $limit }; }
-  | group_by having order_by
-    { $$ = { group_by: $group_by
-           , having: $having
-           , order_by: $order_by }; }
-  | group_by having
-    { $$ = { group_by: $group_by
-           , having: $having }; }
-  | group_by
-    { $$ = { group_by: $group_by }; }
-  | group_by order_by limit offset
-    { $$ = { group_by: $group_by
-           , order_by: $order_by
-           , limit: $limit
-           , offset: $offset }; }
-  | group_by order_by limit
-    { $$ = { group_by: $group_by
-           , order_by: $order_by
-           , limit: $limit }; }
-  | group_by order_by
-    { $$ = { group_by: $group_by
-           , order_by: $order_by }; }
-  | group_by limit offset
-    { $$ = { wroup_by: $group_by
-           , limit: $limit
-           , offset: $offset }; }
-  | group_by limit
-    { $$ = { group_by: $group_by
-           , limit: $limit }; }
-  | group_by offset
-    { $$ = { group_by: $group_by
-           , offset: $offset }; }
-  | having order_by limit offset
-    { $$ = { having: $having
-           , order_by: $order_by
-           , limit: $limit
-           , offset: $offset }; }
-  | having order_by limit
-    { $$ = { having: $having
-           , order_by: $order_by
-           , limit: $limit }; }
-  | having order_by
-    { $$ = { having: $having
-           , order_by: $order_by }; }
-  | having
-    { $$ = { having: $having }; }
-  | having limit offset
-    { $$ = { having: $having
-           , limit: $limit
-           , offset: $offset }; }
-  | having limit
-    { $$ = { having: $having
-           , limit: $limit }; }
-  | having offset
-    { $$ = { having: $having
-           , offset: $offset }; }
-  | order_by limit offset
-    { $$ = { order_by: $order_by
-           , limit: $limit
-           , offset: $offset }; }
-  | order_by limit
-    { $$ = { order_by: $order_by
-           , limit: $limit }; }
-  | order_by
-    { $$ = { order_by: $order_by }; }
-  | order_by offset
-    { $$ = { order_by: $order_by
-           , offset: $offset }; }
-  | limit offset
-    { $$ = { limit: $limit
-           , offset: $offset }; }
-  | limit
-    { $$ = { limit: $limit }; }
-  | offset
-    { $$ = { offset: $offset }; }
+  : where -> $where
   ;
 
 where
-  : WHERE e -> $2
+  : WHERE e group_by  -> _.extend({ where: $2 }, $group_by)
+  | WHERE e           -> { where: $2 }
+  | group_by          -> $group_by
   ;
 
 group_by
-  : GROUP_BY by_es -> $2
+  : GROUP_BY by_es having -> _.extend({ group_by: $2 }, $having)
+  | GROUP_BY by_es        -> { group_by: $2 }
+  | having                -> $having
   ;
 
 having
-  : HAVING e -> $2
+  : HAVING e order_by -> _.extend({ having: $2 }, $order_by)
+  | HAVING e          -> { having: $2 }
+  | order_by          -> $order_by
   ;
 
 order_by
-  : ORDER_BY by_es -> $2
+  : ORDER_BY by_es limit  -> _.extend({ order_by: $2 }, $limit)
+  | ORDER_BY by_es        -> { order_by: $2 }
+  | limit                 -> $limit
   ;
 
 limit
-  : LIMIT e -> $2
+  : LIMIT e offset -> _.extend({ limit: $2 }, $offset)
+  | LIMIT e        -> { limit: $2 }
+  | offset          -> $offset
   ;
 
 offset
-  : OFFSET e -> $2
+  : OFFSET e -> { offset: $2 }
   ;
 
 %%

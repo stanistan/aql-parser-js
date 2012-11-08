@@ -105,8 +105,8 @@ describe('should be a field/ref', function() {
     expect(a.id).toBe(null);
 
     expect(b.name).toEqual('sub2');
-    expect(b.alias).toEqual('something');
-    expect(b.id).toEqual('this_id');
+    expect(b.alias.value).toEqual('something');
+    expect(b.id.value).toEqual('this_id');
   });
 
 });

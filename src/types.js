@@ -145,8 +145,10 @@ var Query = inherit('Query', Sel
         }
       , getOrderBy: function() {
           var f = function(t) { return t.getOrderBySQL(); }
-            // ,
+            , or = this.tables.map(f);
+          return [].concat.apply([], or).join(', ');
         }
+      ,
     }
 );
 
@@ -163,10 +165,15 @@ var Table = inherit('Table', Type
       ));
     }
   , {   getFieldsAsSQL: function() {
-          return _.chain(this.selects)
+          return _.chain(this._getFields())
                   .map(withTable(getSQL, this.getTableName()))
                   .compact()
                   .value();
+        }
+      , _getFields: function() {
+          return _.chain(this.selects).filter(function(t) {
+            return t.isa(Field);
+          });
         }
       , getTableName: function() {
           return this.alias || this.name
@@ -189,6 +196,12 @@ var Table = inherit('Table', Type
         }
       , getJoin: function() {
           return 'LEFT JOIN ' + this.getDeclaration();
+        }
+      , getAliases: function() {
+          return _.chain(this._getFields())
+                  .map(function(t) { return t.alias ? t.alias.value : null; })
+                  .compact()
+                  .value()
         }
     }
 );
