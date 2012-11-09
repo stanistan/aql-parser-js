@@ -132,6 +132,7 @@ es
 
 e
   : literal               -> $1
+  | case_when             -> $1
   | VAR                   -> new t.Token($1)
   | DOTTED_VAR            -> new t.Token($1)
   | BOOL                  -> new t.BoolToken($1)
@@ -154,6 +155,26 @@ e
   | e LT e                -> new t.EqExpr($2, $1, $3)
   | e IS e                -> new t.EqExpr($2, $1, $3)
   | e IN e                -> new t.EqExpr($2, $1, $3)
+  ;
+
+case_when
+  : CASE e conds else END     -> new t.CaseWhen($e, $conds, $else)
+  | CASE e conds END          -> new t.CaseWhen($e, $conds)
+  | CASE conds else END       -> new t.CaseWhen(null, $conds, $else)
+  | CASE conds END            -> new t.CaseWhen(null, $conds)
+  ;
+
+else
+  : ELSE e -> new t.ElseExpr($2)
+  ;
+
+conds
+  : cond conds  -> [$1].concat($3)
+  | cond        -> [$1]
+  ;
+
+cond
+  : WHEN e THEN e -> new t.CondExpr($2, $4)
   ;
 
 clauses

@@ -56,6 +56,37 @@ var NegExpr = inherit('NegExpr', Expr, null
     }
 );
 
+var CaseWhen = inherit('CaseWhen', Expr
+  , function(col, conds, els) {
+      this.col = col || '';
+      this.conds = conds;
+      this.els = els || '';
+    }
+  , {   getSQL: function(table) {
+          var s = withTable(getSQL, table);
+          return ['case', s(this.col), this.conds.map(s), s(this.els), 'end'].join(' ');
+        }
+    }
+);
+
+var ElseExpr = inherit('ElseExpr', Expr, null
+  , {   getSQL: function(table) {
+          return 'else ' + getSQL(table, this.value);
+        }
+    }
+);
+
+var CondExpr = inherit('CondExpr', Expr
+  , function(when, then) {
+      this.when = when;
+      this.then = then;
+    }
+  , {   getSQL: function(table) {
+          return ['when', getSQL(table, this.when), 'then', getSQL(table, this.then)].join(' ')
+        }
+    }
+);
+
 var FnExpr = inherit('FnExpr', Expr
   , function(name, args) {
       this.name = name;
@@ -246,6 +277,9 @@ var types = {
   , NullToken: NullToken
   , StarToken: StarToken
   , LitToken: LitToken
+  , CaseWhen: CaseWhen
+  , CondExpr: CondExpr
+  , ElseExpr: ElseExpr
 };
 
 // and out.

@@ -31,6 +31,12 @@ dgd [0-9.]
 "+"                       return 'PLUS';
 "/"                       return 'DIV';
 
+"case"                    return 'CASE';
+"when"                    return 'WHEN';
+"then"                    return 'THEN';
+"else"                    return 'ELSE';
+"end"                     return 'END';
+
 "in"                      return 'IN';
 ">="                      return 'GTE';
 "<="                      return 'LTE';
