@@ -82,7 +82,7 @@ field
   | e             -> new t.Field($e)
   | ref           -> $ref
   | ref AS alias  -> _.extend($ref, { alias: $alias })
-  | STAR          -> new t.Token('*')
+  | STAR          -> new t.Field(new t.StarToken('*'))
   ;
 
 ref

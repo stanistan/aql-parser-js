@@ -59,7 +59,7 @@ case 24:this.$ = $$[$0];
 break;
 case 25:this.$ = _.extend($$[$0-2], { alias: $$[$0] });
 break;
-case 26:this.$ = new t.Token('*');
+case 26:this.$ = new t.Field(new t.StarToken('*'));
 break;
 case 27:this.$ = new t.PluralRef($$[$0-4], $$[$0-2]);
 break;

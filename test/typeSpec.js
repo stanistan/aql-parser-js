@@ -75,3 +75,10 @@ describe('type inheritence', function() {
   testArrayAgainstType(t.Ref, ['Ref', 'SingleRef', 'PluralRef']);
 
 });
+
+describe('getSQL methods', function() {
+  it('should always return star for star tokens', function() {
+    var a = new t.StarToken();
+    expect(a.getSQL()).toEqual('*');
+  });
+});

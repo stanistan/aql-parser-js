@@ -9,6 +9,9 @@ describe('basic query', function() {
       [   'empty body works'
         , 'something { }'
         , 'select from something' ]
+    , [   'star works as expected'
+        , 'table { * }'
+        , 'select * from table' ]
     , [   'lexically scope field'
         , 'table { field }'
         , 'select table.field from table' ]
@@ -70,7 +73,24 @@ describe('joins', function() {
 
 });
 
-// descibe('')
+describe('to-sql ignores postqueries and refs', function() {
+
+  var runner = [
+      [   'ignores refs'
+        , 'a { [b] }'
+        , 'select from a' ]
+    , [   'ignores aliased refs'
+        , 'a { *, [b] as something }'
+        , 'select * from a' ]
+    , [   'ignores postqueries'
+        , 'table { \
+              *, \
+              something { } \
+           }'
+        ,  'select * from table' ]
+  ];
+
+});
 
 function runTests(arr) {
   arr.forEach(function(t) {
