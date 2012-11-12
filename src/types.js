@@ -144,29 +144,29 @@ var Query = inherit('Query', Sel
         getSQL: function(options) {
 
           // options should have contraints, callbacks, etc
+          var f = function(t) { return t.getFieldsAsSQL().join(', '); };
 
-          var fields = this.tables.map(function(t) { return t.getFieldsAsSQL().join(', '); })
-            , from = this.tables[0].getFrom()
-            , joins = _.chain(this.tables)
-                       .rest()
-                       .map(function(t) { return t.getJoin(); })
-                       .value()
-                       .join(' ')
-                       .trim()
-            , where = this.getWhere() || null
-            , order_by = this.getOrderBy() || null
-            , group_by = this.getGroupBy() || null
-            , having = this.getHaving() || null
-            , limit = this.getLimit() || null
-            , offset = this.getOffset() || null
-            ;
+          var fields    = this.tables.map(f)
+            , from      = this.tables[0].getFrom()
+            , joins     = _.chain(this.tables)
+                           .rest()
+                           .map(function(t) { return t.getJoin(); })
+                           .value()
+                           .join(' ')
+                           .trim()
+            , where     = this.getWhere() || null
+            , order_by  = this.getOrderBy() || null
+            , group_by  = this.getGroupBy() || null
+            , having    = this.getHaving() || null
+            , limit     = this.getLimit() || null
+            , offset    = this.getOffset() || null;
 
           return compact([  'select'
                   , compact(fields).join(', ')
                   , from
                   , joins
                   , where ? 'where ' + where : ''
-                  , group_by ? 'GROUP BY ' + group_by : ''
+                  , group_by ? 'group by ' + group_by : ''
                   , having ? 'having ' + having : ''
                   , order_by ? 'order by ' + order_by : ''
                   , limit ? 'limit ' + limit : ''
@@ -207,20 +207,6 @@ var Query = inherit('Query', Sel
     }
 );
 
-function concat(arr) {
-  return [].concat.apply([], arr);
-}
-
-function concatj(glue, arr) {
-  return j.apply(null, unshift(compact(concat(arr)), glue));
-}
-
-function unshift(arr, thing) {
-  var a = _.clone(arr);
-  a.unshift(thing);
-  return a;
-}
-
 var Table = inherit('Table', Type
   , function(name, selects, clauses, post, extra) {
       this.merge(_.extend(
@@ -248,29 +234,25 @@ var Table = inherit('Table', Type
           return this.alias || this.name
         }
       , getWhereSQL: function() {
-          return this.clauses.where
-            ? this.clauses.where.getSQL(this.getTableName())
-            : '';
+          return this.applyToClauseSQL('where');
         }
       , getOrderBySQL: function() {
-          var s = getSQLt(this.getTableName())
-            , f = function(e) {
-                    e = _.isArray(e) ? e : [e];
-                    return compact(e.map(s)).join(' ')
-                  };
-          return this.clauses.order_by
-            ? this.clauses.order_by.map(f)
-            : [];
+          return this.mapByClauseSQL('order_by');
+        }
+      , gs: function() {
+          return getSQLt(this.getTableName());
         }
       , getGroupBySQL: function() {
-          var s = getSQLt(this.getTableName())
-            , f = function(e) {
-                    e = _.isArray(e) ? e : [e];
-                    return compact(e.map(s)).join(' ');
-                  };
-          return this.clauses.group_by
-            ? this.clauses.group_by.map(f)
-            : [];
+          return this.mapByClauseSQL('group_by');
+        }
+      , mapByClause: function(clause, f) {
+          return compact(this.clauses[clause] || []).map(f);
+        }
+      , mapByClauseSQL: function(clause) {
+          var s = this.gs();
+          return this.mapByClause(clause, function(e) {
+            return compact(arrayify(e).map(s)).join(' ');
+          });
         }
       , getDeclaration: function() {
           var p = [
@@ -281,10 +263,10 @@ var Table = inherit('Table', Type
           return compact(p).join(' ').trim();
         }
       , getFrom: function() {
-          return j(' ', 'from', this.getDeclaration()).trim();
+          return j(' ', 'from', this.getDeclaration());
         }
       , getJoin: function() {
-          return j(' ', 'left join', this.getDeclaration()).trim();
+          return j(' ', 'left join', this.getDeclaration());
         }
       , getAliases: function() {
           return _.chain(this._getFields())
@@ -293,13 +275,20 @@ var Table = inherit('Table', Type
                   .value()
         }
       , getHavingSQL: function() {
-          return [];
+          return this.applyToClauseSQL('having');
         }
       , getLimitSQL: function() {
-          return this.clauses.limit ? this.clauses.limit.getSQL(this.getTableName()) : '';
+          return this.applyToClauseSQL('limit');
         }
       , getOffsetSQL: function() {
-          return this.clauses.offset ? this.clauses.offset.getSQL(this.getTableName()) : '';
+          return this.applyToClauseSQL('offset');
+        }
+      , applyToClause: function(clause, f) {
+          var args = [].slice.call(arguments, 2), cl = this.clauses[clause];
+          return cl ? cl[f].apply(cl, args) : '';
+        }
+      , applyToClauseSQL: function(clause) {
+          return this.applyToClause(clause, 'getSQL', this.getTableName());
         }
     }
 );
@@ -307,6 +296,10 @@ var Table = inherit('Table', Type
 // helpers
 
 var getSQLt = _.bind(withTable, null, getSQL);
+
+function arrayify(arr) {
+  return _.isArray(arr) ? arr : [arr];
+}
 
 function rVal(val) {
   return _.bind(rtValue, { value: val });
@@ -344,6 +337,20 @@ function compact(arr) {
   return _.filter(arr, function(p) {
     return !!p || p === 0;
   });
+}
+
+function concat(arr) {
+  return [].concat.apply([], arr);
+}
+
+function concatj(glue, arr) {
+  return j.apply(null, unshift(compact(concat(arr)), glue));
+}
+
+function unshift(arr, thing) {
+  var a = _.clone(arr);
+  a.unshift(thing);
+  return a;
 }
 
 var types = {

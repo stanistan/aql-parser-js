@@ -5,7 +5,7 @@ var parser = require('./../src/parser')
 
 describe('basic query', function() {
 
-  var runner = [
+  var ts = [
       [   'empty body works'
         , 'something { }'
         , 'select from something' ]
@@ -35,13 +35,13 @@ describe('basic query', function() {
         , 'select coalesce(artist.name, artist.bio, \'(n/a)\') as thing from artist' ]
   ];
 
-  runTests(runner);
+  runTests(ts);
 
 });
 
 describe('joins', function() {
 
-  var runner = [
+  var ts = [
       [   'you can have multiple table declarations'
         , 'table1 { field } \
            table2 { } '
@@ -72,13 +72,13 @@ describe('joins', function() {
            left join c on b.id = c.b_id' ]
   ];
 
-  runTests(runner);
+  runTests(ts);
 
 });
 
 describe('case when', function() {
 
-  var runner = [
+  var ts = [
       [   'should work in a basic sense'
         , 'table { case when a = 1 then "one" else "dunno" end as num }'
         , 'select case when table.a = 1 then "one" else "dunno" end as num from table' ]
@@ -108,13 +108,13 @@ describe('case when', function() {
            from table' ]
   ];
 
-  runTests(runner);
+  runTests(ts);
 
 });
 
 describe('to-sql ignores postqueries and refs', function() {
 
-  var runner = [
+  var ts = [
       [   'ignores refs'
         , 'a { [b] }'
         , 'select from a' ]
@@ -129,13 +129,13 @@ describe('to-sql ignores postqueries and refs', function() {
         ,  'select * from table' ]
   ];
 
-  runTests(runner);
+  runTests(ts);
 
 });
 
 describe('where clause and expressions', function() {
 
-  var runner = [
+  var ts = [
       [   'parses where with scoping'
         , 't { * where id = 1 }'
         , 'select * from t where t.id = 1' ]
@@ -154,13 +154,13 @@ describe('where clause and expressions', function() {
            where t.f in (select table.thing from table where table.something is not null)' ]
   ];
 
-  runTests(runner);
+  runTests(ts);
 
 });
 
 describe('order by', function() {
 
-  var runner = [
+  var ts = [
       [   'basic order by'
         , 't { id order by id }'
         , 'select t.id from t order by t.id' ]
@@ -179,13 +179,13 @@ describe('order by', function() {
         , 'select t.id from t left join t2 order by t.id, t2.id' ]
   ];
 
-  runTests(runner);
+  runTests(ts);
 
 });
 
 describe('limit', function() {
 
-  var runner = [
+  var ts = [
       [   'basic limit'
         , 't { limit 10 }'
         , 'select from t limit 10' ]
@@ -194,22 +194,71 @@ describe('limit', function() {
         , 'select from t left join t2 limit 4' ]
   ];
 
-  runTests(runner);
+  runTests(ts);
 
 });
 
 describe('offset', function() {
 
-  var runner = [
+  var ts = [
       [   'basic offset'
         , 't { offset 10 }'
         , 'select from t offset 10' ]
     , [   'should take the last offset if multiple are specified'
         , 't { offset 10 } t2 { offset 3 }'
         , 'select from t left join t2 offset 3' ]
+    , [   'with limit'
+        , 't { id limit 10 offset 10 }'
+        , 'select t.id from t limit 10 offset 10' ]
   ];
 
-  runTests(runner);
+  runTests(ts);
+
+});
+
+describe('all-in-all query', function() {
+
+  var ts = [
+      [   'having many clauses'
+        , 'table {\
+              field1 as al,\
+              sum(quantity) as c,\
+              [aref(withfield)] as ladida,\
+              "text" as text\
+              \
+              postquery {\
+                field\
+              }\
+              post_join {}\
+              where id > 10 and something in (another_thing { id where table.camera is null})\
+              group by field1\
+              having c > 1\
+              order by id\
+              limit 30\
+              offset 100\
+           }\
+           table2 as t on table.id = table_id {\
+              a - b as difference\
+              limit 1\
+           }'
+        , 'select \
+              table.field1 as al,\
+              sum(table.quantity) as c,\
+              "text" as text,\
+              t.a - t.b as difference\
+           from table\
+           left join table2 as t on table.id = t.table_id\
+           where table.id > 10 \
+            and table.something in\
+            (select another_thing.id from another_thing where table.camera is null)\
+           group by table.field1\
+           having table.c > 1\
+           order by table.id\
+           limit 1\
+           offset 100' ]
+  ];
+
+  runTests(ts);
 
 });
 
