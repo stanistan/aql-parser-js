@@ -62,14 +62,14 @@ var CaseWhen = inherit('CaseWhen', Expr
     }
   , {   getSQL: function(table) {
           var s = getSQLt(table);
-          return j(' ', 'case', s(this.col), this.conds.map(s), s(this.els), 'end');
+          return j(' ', 'case', s(this.col), this.conds.map(s).join(' '), s(this.els), 'end');
         }
     }
 );
 
 var ElseExpr = inherit('ElseExpr', Expr, null
   , {   getSQL: function(table) {
-          return 'else ' + getSQL(table, this.value);
+          return j(' ', 'else', getSQL(table, this.value));
         }
     }
 );
@@ -81,7 +81,7 @@ var CondExpr = inherit('CondExpr', Expr
     }
   , {   getSQL: function(table) {
           var s = withTable(getSQL, table)
-          return ['when', getSQL(table, this.when), 'then', getSQL(table, this.then)].join(' ')
+          return j(' ', 'when', getSQL(table, this.when), 'then', getSQL(table, this.then))
         }
     }
 );
@@ -251,7 +251,7 @@ function rtValue() {
 }
 
 function j(del) {
-  return [].slice.call(arguments, 1).join(del).trim();
+  return _.compact([].slice.call(arguments, 1)).join(del).trim();
 }
 
 function getSQL(table, thing) {

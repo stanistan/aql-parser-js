@@ -157,7 +157,7 @@ case 73:this.$ = new t.CaseWhen(null, $$[$0-1]);
 break;
 case 74:this.$ = new t.ElseExpr($$[$0]);
 break;
-case 75:this.$ = [$$[$0-1]].concat($$[$01]);
+case 75:this.$ = [$$[$0-1]].concat($$[$0]);
 break;
 case 76:this.$ = [$$[$0]];
 break;

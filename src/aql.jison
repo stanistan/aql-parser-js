@@ -168,7 +168,7 @@ else
   ;
 
 conds
-  : cond conds  -> [$1].concat($3)
+  : cond conds  -> [$1].concat($2)
   | cond        -> [$1]
   ;
 
