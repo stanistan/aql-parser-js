@@ -189,6 +189,24 @@ describe('limit', function() {
       [   'basic limit'
         , 't { limit 10 }'
         , 'select from t limit 10' ]
+    , [   'should take the last limit if multiple are specified'
+        , 't { limit 10 } t2 { limit 4 }'
+        , 'select from t left join t2 limit 4' ]
+  ];
+
+  runTests(runner);
+
+});
+
+describe('offset', function() {
+
+  var runner = [
+      [   'basic offset'
+        , 't { offset 10 }'
+        , 'select from t offset 10' ]
+    , [   'should take the last offset if multiple are specified'
+        , 't { offset 10 } t2 { offset 3 }'
+        , 'select from t left join t2 offset 3' ]
   ];
 
   runTests(runner);

@@ -186,10 +186,10 @@ var Query = inherit('Query', Sel
           return concatj(' and ', this.mapTablesFn('getHavingSQL'))
         }
       , getLimit: function() {
-          return -1;
+          return _.last(compact(this.mapTablesFn('getLimitSQL')));
         }
       , getOffset: function() {
-          return 0;
+          return _.last(compact(this.mapTablesFn('getOffsetSQL')));
         }
       , mapTables: function(f) {
           return this.tables.map(f);
@@ -197,6 +197,11 @@ var Query = inherit('Query', Sel
       , mapTablesFn: function(f_name) {
           return this.mapTables(function(t) {
             return t[f_name]();
+          });
+        }
+      , mapTablesProp: function(prop) {
+          return this.mapTables(function(t) {
+            return t[prop];
           });
         }
     }
@@ -286,6 +291,15 @@ var Table = inherit('Table', Type
                   .map(function(t) { return t.alias ? t.alias.value : null; })
                   .compact()
                   .value()
+        }
+      , getHavingSQL: function() {
+          return [];
+        }
+      , getLimitSQL: function() {
+          return this.clauses.limit ? this.clauses.limit.getSQL(this.getTableName()) : '';
+        }
+      , getOffsetSQL: function() {
+          return this.clauses.offset ? this.clauses.offset.getSQL(this.getTableName()) : '';
         }
     }
 );
