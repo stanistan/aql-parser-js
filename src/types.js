@@ -22,22 +22,20 @@ var Token = inherit('Token', Type
 );
 
 var LitToken = inherit('LitToken', Token, null
-  , { getSQL: function() { return this.value; } }
-);
-
-var StarToken = inherit('StarToken', Token, null
-  , { getSQL: function() { return '*'; } }
+  , { getSQL: rtValue }
 );
 
 var BoolToken = inherit('BoolToken', LitToken);
 
-var NullToken = inherit('NullToken', Token, null
-  , { getSQL: function() { return 'NULL'; } }
+var StarToken = inherit('StarToken', LitToken, null
+  , { getSQL: rVal('*') }
 );
 
-var Sel = inherit('Sel', Type, function() {
-  this.alias = '';
-});
+var NullToken = inherit('NullToken', LitToken, null
+  , { getSQL: rVal('null') }
+);
+
+var Sel = inherit('Sel', Type);
 
 var Expr = inherit('Expr', Sel
   , function(value) {
@@ -51,7 +49,7 @@ var Expr = inherit('Expr', Sel
 
 var NegExpr = inherit('NegExpr', Expr, null
   , {   getSQL: function(table) {
-          return 'not ' + this.value.getSQL(table);
+          return j(' ', 'not', this.value.getSQL(table));
         }
     }
 );
@@ -63,8 +61,8 @@ var CaseWhen = inherit('CaseWhen', Expr
       this.els = els || '';
     }
   , {   getSQL: function(table) {
-          var s = withTable(getSQL, table);
-          return ['case', s(this.col), this.conds.map(s), s(this.els), 'end'].join(' ');
+          var s = getSQLt(table);
+          return j(' ', 'case', s(this.col), this.conds.map(s), s(this.els), 'end');
         }
     }
 );
@@ -82,6 +80,7 @@ var CondExpr = inherit('CondExpr', Expr
       this.then = then;
     }
   , {   getSQL: function(table) {
+          var s = withTable(getSQL, table)
           return ['when', getSQL(table, this.when), 'then', getSQL(table, this.then)].join(' ')
         }
     }
@@ -93,7 +92,7 @@ var FnExpr = inherit('FnExpr', Expr
       this.args = args;
     }
   , {   getSQL: function(table) {
-          return this.name + '(' + this.args.map(withTable(getSQL, table)) + ')';
+          return j('', this.name, '(', this.args.map(getSQLt(table)), ')');
         }
     }
 );
@@ -105,9 +104,8 @@ var ExprExpr = inherit('ExprExpr', Expr
         this.right = right;
       }
     , {   getSQL: function(table) {
-            return getSQL(table, this.left) +
-                   ' ' + this.operation + ' ' +
-                   getSQL(table, this.right)
+            var s = getSQLt(table);
+            return j(' ', s(this.left), this.operation, s(this.right));
           }
       }
 );
@@ -128,10 +126,12 @@ var Field = inherit('Field', Sel
     }
 );
 
-var Ref = inherit('Ref', Sel, function(name, id) {
-  this.name = name;
-  this.id = id || null;
-});
+var Ref = inherit('Ref', Sel
+  , function(name, id) {
+      this.name = name;
+      this.id = id || null;
+    }
+);
 
 var SingleRef = inherit('SingleRef', Ref);
 var PluralRef = inherit('PluralRef', Ref);
@@ -142,13 +142,14 @@ var Query = inherit('Query', Sel
     }
   , {
         getSQL: function(options) {
-          var fields = this.tables.map(function(t) { return t.getFieldsAsSQL().join(',\n '); })
+          var fields = this.tables.map(function(t) { return t.getFieldsAsSQL().join(', '); })
             , from = this.tables[0].getFrom()
             , joins = _.chain(this.tables)
                        .rest()
                        .map(function(t) { return t.getJoin(); })
                        .value()
                        .join(' ')
+                       .trim()
             , where = this.getWhere() || null
             // , order_by = this.getOrderBy() || null
             // , group_by = this.getGroupBy() || null
@@ -157,22 +158,22 @@ var Query = inherit('Query', Sel
             // , offset = thils.getOffset() || null
             ;
 
-          return [  'SELECT'
-                  , fields.join(',\n ')
+          return _.compact([  'select'
+                  , _.compact(fields).join(', ')
                   , from
                   , joins
-                  , where ? 'WHERE ' + where : ''
+                  , where ? 'where ' + where : ''
                   // , group_by ? 'GROUP BY ' + group_by.join(', ') : ''
                   // , having ? 'HAVING ' + having : ''
                   // , order_by ? 'ORDER BY ' + order_by.join(', ') : ''
                   // , limit ? 'LIMIT ' + limit : ''
                   // , offset ? 'OFFSET ' + offset : ''
-                ].join('\n ');
+                ]).join(' ');
         }
       , getWhere: function() {
           var f = function(t) { return t.getWhereSQL(); }
             , wh = this.tables.map(f);
-          return [].concat.apply([], wh).join(' and ');
+          return _.compact([].concat.apply([], wh)).join(' and ').trim();
         }
       , getOrderBy: function() {
           var f = function(t) { return t.getOrderBySQL(); }
@@ -217,16 +218,16 @@ var Table = inherit('Table', Type
       , getDeclaration: function() {
           var p = [
               this.name
-            , this.alias ? ' as ' + this.alias : false
-            , this.join ? ' on ' + this.join.getSQL(this.getTableName()) : false
+            , this.alias ? 'as ' + this.alias : false
+            , this.join ? 'on ' + this.join.getSQL(this.getTableName()) : false
           ];
-          return _.compact(p).join(' ');
+          return _.compact(p).join(' ').trim();
         }
       , getFrom: function() {
-          return 'FROM ' + this.getDeclaration();
+          return j(' ', 'from', this.getDeclaration()).trim();
         }
       , getJoin: function() {
-          return 'LEFT JOIN ' + this.getDeclaration();
+          return 'left join ' + this.getDeclaration();
         }
       , getAliases: function() {
           return _.chain(this._getFields())
@@ -237,9 +238,25 @@ var Table = inherit('Table', Type
     }
 );
 
+// helpers
+
+var getSQLt = _.bind(withTable, null, getSQL);
+
+function rVal(val) {
+  return _.bind(rtValue, { value: val });
+}
+
+function rtValue() {
+  return this.value;
+}
+
+function j(del) {
+  return [].slice.call(arguments, 1).join(del).trim();
+}
+
 function getSQL(table, thing) {
   if (_.isArray(thing)) {
-    return '(' + thing.map(withTable(getSQL, table)).join(', ') + ')'
+    return '(' + thing.map(getSQLt(table)).join(', ') + ')'
   }
 
   if (!isType(thing)) {

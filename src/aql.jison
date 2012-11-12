@@ -25,8 +25,7 @@ function makeBody() {
 %%
 
 statement
-  : query EOF
-    { return $query; }
+  : query EOF { return $query; }
   ;
 
 query
@@ -35,12 +34,12 @@ query
 
 queries
   : query COMMA queries -> [$1].concat($3)
-  | query -> [$1];
+  | query               -> [$1]
   ;
 
 table_defs
-  : table_def table_defs -> [$1].concat($2)
-  | table_def -> [$1]
+  : table_def table_defs  -> [$1].concat($2)
+  | table_def             -> [$1]
   ;
 
 table_def
@@ -52,38 +51,38 @@ table_def
 
 body
   : LBR table_inner RBR -> $table_inner
-  | LBR RBR -> {}
+  | LBR RBR             -> {}
   ;
 
 table_decl
   : VAR AS VAR ON e -> { name: $1, alias: $3, join: $e }
-  | VAR ON e -> { name: $1, join: $e }
-  | VAR AS VAR -> { name: $1, alias: $3 }
+  | VAR ON e        -> { name: $1, join: $e }
+  | VAR AS VAR      -> { name: $1, alias: $3 }
   ;
 
 table_inner
   : fields_or_queries clauses -> makeBody($1, { clauses: $2 })
-  | fields_or_queries -> makeBody($1)
-  | clauses -> makeBody({ clauses: $1 })
+  | fields_or_queries         -> makeBody($1)
+  | clauses                   -> makeBody({ clauses: $1 })
   ;
 
 fields_or_queries
-  : queries -> { posts: $queries }
-  | fields queries -> { selects: $fields, posts: $queries }
-  | fields -> { selects: $fields }
+  : queries         -> { posts: $queries }
+  | fields queries  -> { selects: $fields, posts: $queries }
+  | fields          -> { selects: $fields }
   ;
 
 fields
-  : field COMMA fields -> [$1].concat($3)
-  | field -> [$1]
+  : field COMMA fields  -> [$1].concat($3)
+  | field               -> [$1]
   ;
 
 field
-  : e AS alias -> new t.Field($e, $alias)
-  | e -> new t.Field($e)
-  | ref -> $ref
-  | ref AS alias { $ref.alias = $alias; $$ = $ref; }
-  | STAR -> new t.Token('*')
+  : e AS alias    -> new t.Field($e, $alias)
+  | e             -> new t.Field($e)
+  | ref           -> $ref
+  | ref AS alias  -> _.extend($ref, { alias: $alias })
+  | STAR          -> new t.Token('*')
   ;
 
 ref
@@ -98,13 +97,13 @@ ref
   ;
 
 or_dotted
-  : DOTTED_VAR -> new t.Token($1)
-  | VAR -> new t.Token($1)
+  : DOTTED_VAR  -> new t.Token($1)
+  | VAR         -> new t.Token($1)
   ;
 
 alias
   : literal -> $1
-  | VAR -> new t.Token($1)
+  | VAR     -> new t.Token($1)
   ;
 
 literal
@@ -115,19 +114,19 @@ literal
 
 by_e
   : e ORD -> [$1, $2]
-  | e -> [$1]
+  | e     -> [$1]
   ;
 
 by_es
-  : by_e COMMA by_es -> [$1].concat($3)
-  | by_e -> [$1]
+  : by_e COMMA by_es  -> [$1].concat($3)
+  | by_e              -> [$1]
   ;
 
 es
-  : e COMMA es -> [$1].concat($3)
-  | e -> [$1]
-  | STAR -> [new t.StarToken()]
-  | query -> [$1]
+  : e COMMA es  -> [$1].concat($3)
+  | e           -> [$1]
+  | STAR        -> [new t.StarToken()]
+  | query       -> [$1]
   ;
 
 e
@@ -208,7 +207,7 @@ order_by
 limit
   : LIMIT e offset -> _.extend({ limit: $2 }, $offset)
   | LIMIT e        -> { limit: $2 }
-  | offset          -> $offset
+  | offset         -> $offset
   ;
 
 offset

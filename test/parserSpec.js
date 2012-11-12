@@ -101,7 +101,7 @@ describe('should be a field/ref', function() {
 
   it('should have properties', function() {
     expect(a.name).toEqual('sub');
-    expect(a.alias).toEqual('');
+    expect(a.alias || '').toEqual('');
     expect(a.id).toBe(null);
 
     expect(b.name).toEqual('sub2');

@@ -32,13 +32,3 @@ some_join as aliased on table.some_join_id = aliased.id {
     *
 }
 ```
-### Testing
-
-###### From git root dir:
-
-```bash
-lib/test
-```
-
-This runs `test/start.js`. Eventually, there will be unit tests using `jasmine`, but
-the structure of the output isn't finalized yet.
