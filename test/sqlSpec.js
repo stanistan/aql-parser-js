@@ -73,6 +73,8 @@ describe('joins', function() {
 
 });
 
+describe('case when', function() {});
+
 describe('to-sql ignores postqueries and refs', function() {
 
   var runner = [
@@ -84,11 +86,13 @@ describe('to-sql ignores postqueries and refs', function() {
         , 'select * from a' ]
     , [   'ignores postqueries'
         , 'table { \
-              *, \
+              * \
               something { } \
            }'
         ,  'select * from table' ]
   ];
+
+  runTests(runner);
 
 });
 
