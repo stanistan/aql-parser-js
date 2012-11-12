@@ -183,6 +183,18 @@ describe('order by', function() {
 
 });
 
+describe('limit', function() {
+
+  var runner = [
+      [   'basic limit'
+        , 't { limit 10 }'
+        , 'select from t limit 10' ]
+  ];
+
+  runTests(runner);
+
+});
+
 function runTests(arr) {
   arr.forEach(function(t) {
     runFor.apply(null, t);

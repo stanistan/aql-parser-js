@@ -179,6 +179,18 @@ var Query = inherit('Query', Sel
       , getOrderBy: function() {
           return concatj(', ', this.mapTablesFn('getOrderBySQL'));
         }
+      , getGroupBy: function() {
+          return concatj(', ', this.mapTablesFn('getGroupBySQL'));
+        }
+      , getHaving: function() {
+          return concatj(' and ', this.mapTablesFn('getHavingSQL'))
+        }
+      , getLimit: function() {
+          return -1;
+        }
+      , getOffset: function() {
+          return 0;
+        }
       , mapTables: function(f) {
           return this.tables.map(f);
         }
@@ -243,6 +255,16 @@ var Table = inherit('Table', Type
                   };
           return this.clauses.order_by
             ? this.clauses.order_by.map(f)
+            : [];
+        }
+      , getGroupBySQL: function() {
+          var s = getSQLt(this.getTableName())
+            , f = function(e) {
+                    e = _.isArray(e) ? e : [e];
+                    return compact(e.map(s)).join(' ');
+                  };
+          return this.clauses.group_by
+            ? this.clauses.group_by.map(f)
             : [];
         }
       , getDeclaration: function() {
