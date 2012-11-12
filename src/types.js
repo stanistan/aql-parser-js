@@ -92,7 +92,7 @@ var FnExpr = inherit('FnExpr', Expr
       this.args = args;
     }
   , {   getSQL: function(table) {
-          return j('', this.name, '(', this.args.map(getSQLt(table)), ')');
+          return j('', this.name, '(', this.args.map(getSQLt(table)).join(', '), ')');
         }
     }
 );
@@ -105,7 +105,7 @@ var ExprExpr = inherit('ExprExpr', Expr
       }
     , {   getSQL: function(table) {
             var s = getSQLt(table);
-            return j(' ', s(this.left), this.operation, s(this.right));
+            return j(' ', s(this.left), this.operation.toLowerCase(), s(this.right));
           }
       }
 );
@@ -142,6 +142,9 @@ var Query = inherit('Query', Sel
     }
   , {
         getSQL: function(options) {
+
+          // options should have contraints, callbacks, etc
+
           var fields = this.tables.map(function(t) { return t.getFieldsAsSQL().join(', '); })
             , from = this.tables[0].getFrom()
             , joins = _.chain(this.tables)
@@ -151,38 +154,55 @@ var Query = inherit('Query', Sel
                        .join(' ')
                        .trim()
             , where = this.getWhere() || null
-            // , order_by = this.getOrderBy() || null
-            // , group_by = this.getGroupBy() || null
-            // , having = this.getHaving() || null
-            // , limit = this.getLimit() || null
-            // , offset = thils.getOffset() || null
+            , order_by = this.getOrderBy() || null
+            , group_by = this.getGroupBy() || null
+            , having = this.getHaving() || null
+            , limit = this.getLimit() || null
+            , offset = this.getOffset() || null
             ;
 
-          return _.compact([  'select'
-                  , _.compact(fields).join(', ')
+          return compact([  'select'
+                  , compact(fields).join(', ')
                   , from
                   , joins
                   , where ? 'where ' + where : ''
-                  // , group_by ? 'GROUP BY ' + group_by.join(', ') : ''
-                  // , having ? 'HAVING ' + having : ''
-                  // , order_by ? 'ORDER BY ' + order_by.join(', ') : ''
-                  // , limit ? 'LIMIT ' + limit : ''
-                  // , offset ? 'OFFSET ' + offset : ''
+                  , group_by ? 'GROUP BY ' + group_by : ''
+                  , having ? 'having ' + having : ''
+                  , order_by ? 'order by ' + order_by : ''
+                  , limit ? 'limit ' + limit : ''
+                  , offset ? 'offset ' + offset : ''
                 ]).join(' ');
         }
       , getWhere: function() {
-          var f = function(t) { return t.getWhereSQL(); }
-            , wh = this.tables.map(f);
-          return _.compact([].concat.apply([], wh)).join(' and ').trim();
+          return concatj(' and ', this.mapTablesFn('getWhereSQL'));
         }
       , getOrderBy: function() {
-          var f = function(t) { return t.getOrderBySQL(); }
-            , or = this.tables.map(f);
-          return [].concat.apply([], or).join(', ');
+          return concatj(', ', this.mapTablesFn('getOrderBySQL'));
         }
-      ,
+      , mapTables: function(f) {
+          return this.tables.map(f);
+        }
+      , mapTablesFn: function(f_name) {
+          return this.mapTables(function(t) {
+            return t[f_name]();
+          });
+        }
     }
 );
+
+function concat(arr) {
+  return [].concat.apply([], arr);
+}
+
+function concatj(glue, arr) {
+  return j.apply(null, unshift(compact(concat(arr)), glue));
+}
+
+function unshift(arr, thing) {
+  var a = _.clone(arr);
+  a.unshift(thing);
+  return a;
+}
 
 var Table = inherit('Table', Type
   , function(name, selects, clauses, post, extra) {
@@ -215,19 +235,29 @@ var Table = inherit('Table', Type
             ? this.clauses.where.getSQL(this.getTableName())
             : '';
         }
+      , getOrderBySQL: function() {
+          var s = getSQLt(this.getTableName())
+            , f = function(e) {
+                    e = _.isArray(e) ? e : [e];
+                    return compact(e.map(s)).join(' ')
+                  };
+          return this.clauses.order_by
+            ? this.clauses.order_by.map(f)
+            : [];
+        }
       , getDeclaration: function() {
           var p = [
               this.name
             , this.alias ? 'as ' + this.alias : false
             , this.join ? 'on ' + this.join.getSQL(this.getTableName()) : false
           ];
-          return _.compact(p).join(' ').trim();
+          return compact(p).join(' ').trim();
         }
       , getFrom: function() {
           return j(' ', 'from', this.getDeclaration()).trim();
         }
       , getJoin: function() {
-          return 'left join ' + this.getDeclaration();
+          return j(' ', 'left join', this.getDeclaration()).trim();
         }
       , getAliases: function() {
           return _.chain(this._getFields())
@@ -251,7 +281,7 @@ function rtValue() {
 }
 
 function j(del) {
-  return _.compact([].slice.call(arguments, 1)).join(del).trim();
+  return compact([].slice.call(arguments, 1)).join(del).trim();
 }
 
 function getSQL(table, thing) {
@@ -273,6 +303,12 @@ function withTable(f, table) {
 function isType(t) {
   return t && _.isObject(t) && t instanceof Type;
 };
+
+function compact(arr) {
+  return _.filter(arr, function(p) {
+    return !!p || p === 0;
+  });
+}
 
 var types = {
     Token: Token

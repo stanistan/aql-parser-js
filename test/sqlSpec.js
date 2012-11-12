@@ -27,9 +27,12 @@ describe('basic query', function() {
     , [   'works with a table alias'
         , 'table as table_alias { id as my_renamed_id }'
         , 'select table_alias.id as my_renamed_id from table as table_alias' ]
-    , [   'has expression "scoping"'
+    , [   'has expression/fn "scoping"'
         , 'artist { count(name) as c }'
         , 'select count(artist.name) as c from artist' ]
+    , [   'fns can have multiple args'
+        , 'artist { coalesce(name, bio, \'(n/a)\') as thing }'
+        , 'select coalesce(artist.name, artist.bio, \'(n/a)\') as thing from artist' ]
   ];
 
   runTests(runner);
@@ -124,6 +127,56 @@ describe('to-sql ignores postqueries and refs', function() {
               something { } \
            }'
         ,  'select * from table' ]
+  ];
+
+  runTests(runner);
+
+});
+
+describe('where clause and expressions', function() {
+
+  var runner = [
+      [   'parses where with scoping'
+        , 't { * where id = 1 }'
+        , 'select * from t where t.id = 1' ]
+    , [   'supports and/or/parens/is/null'
+        , 't { id where id > 10 and (other = 0 or other is null) }'
+        , 'select t.id from t where t.id > 10 and (t.other = 0 or t.other is null)' ]
+    , [   'supports in expression with list'
+        , 't { field where id in (1, 2, 3, 4, 5) }'
+        , 'select t.field from t where t.id in (1, 2, 3, 4, 5)' ]
+    , [   'supports in expression with list strings'
+        , 't { something where name in ("Frank", "John", "Stan", "Michael") }'
+        , 'select t.something from t where t.name in ("Frank", "John", "Stan", "Michael")' ]
+    , [   'supports nested queries for IN expressions (AWW YEAH)'
+        , 't { field where f in ( table { thing where something is not null } ) }'
+        , 'select t.field from t \
+           where t.f in (select table.thing from table where table.something is not null)' ]
+  ];
+
+  runTests(runner);
+
+});
+
+describe('order by', function() {
+
+  var runner = [
+      [   'basic order by'
+        , 't { id order by id }'
+        , 'select t.id from t order by t.id' ]
+    , [   'with order: asc | desc'
+        , 't { id order by name desc }'
+        , 'select t.id from t order by t.name desc' ]
+    , [   'works with where clause and can have multiple'
+        , 't { name where active = 1 order by lname desc, name desc }'
+        , 'select t.name from t where t.active = 1 order by t.lname desc, t.name desc' ]
+    , [   'multiple tables decls'
+        , 't { id order by id } \
+           t2 { order by id }'
+        , 'select t.id from t left join t2 order by t.id, t2.id' ]
+    , [   'can reference other table from inside the clause'
+        , 't { id order by id, t2.id } t2 { }'
+        , 'select t.id from t left join t2 order by t.id, t2.id' ]
   ];
 
   runTests(runner);
