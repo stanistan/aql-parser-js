@@ -71,7 +71,7 @@ Table constraints: (in progress)
 // given the previous AQL statement and query object
 
 var options = {
-    constraint: ['active', 1] // field, val
+    constraints: ['active', 1] // field, val
 };
 
 query.getSQL(options);
