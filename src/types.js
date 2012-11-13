@@ -143,35 +143,35 @@ var Query = inherit('Query', Sel
   , {
         getSQL: function(options) {
 
-          // options should have contraints, callbacks, etc
-          var f = function(t) { return t.getFieldsAsSQL().join(', '); };
+          var f = function(t) { return t.getFieldsAsSQL().join(', '); }
+            , j = function(t) { return t.getJoin(); };
 
           var fields    = this.tables.map(f)
             , from      = this.tables[0].getFrom()
-            , joins     = _.chain(this.tables)
-                           .rest()
-                           .map(function(t) { return t.getJoin(); })
-                           .value()
-                           .join(' ')
-                           .trim()
-            , where     = this.getWhere() || null
+            , joins     = _.rest(_.clone(this.tables)).map(j).join(' ').trim()
+            , where     = this.getWhere()   || null
             , order_by  = this.getOrderBy() || null
             , group_by  = this.getGroupBy() || null
-            , having    = this.getHaving() || null
-            , limit     = this.getLimit() || null
-            , offset    = this.getOffset() || null;
+            , having    = this.getHaving()  || null
+            , limit     = this.getLimit()   || null
+            , offset    = this.getOffset()  || null;
 
-          return compact([  'select'
-                  , compact(fields).join(', ')
-                  , from
-                  , joins
-                  , where ? 'where ' + where : ''
-                  , group_by ? 'group by ' + group_by : ''
-                  , having ? 'having ' + having : ''
-                  , order_by ? 'order by ' + order_by : ''
-                  , limit ? 'limit ' + limit : ''
-                  , offset ? 'offset ' + offset : ''
-                ]).join(' ');
+
+          var re = [
+            , 'select'
+            , compact(fields).join(', ')
+            , from
+            , joins
+            , where     ? 'where '    + where     : ''
+            , group_by  ? 'group by ' + group_by  : ''
+            , having    ? 'having '   + having    : ''
+            , order_by  ? 'order by ' + order_by  : ''
+            , limit     ? 'limit '    + limit     : ''
+            , offset    ? 'offset '   + offset    : ''
+          ];
+
+          return compact(re).join(' ');
+
         }
       , getWhere: function() {
           return concatj(' and ', this.mapTablesFn('getWhereSQL'));
@@ -254,19 +254,11 @@ var Table = inherit('Table', Type
             return compact(arrayify(e).map(s)).join(' ');
           });
         }
-      , getDeclaration: function() {
-          var p = [
-              this.name
-            , this.alias ? 'as ' + this.alias : false
-            , this.join ? 'on ' + this.join.getSQL(this.getTableName()) : false
-          ];
-          return compact(p).join(' ').trim();
-        }
       , getFrom: function() {
-          return j(' ', 'from', this.getDeclaration());
+          return this.getDeclPrefix('from');
         }
       , getJoin: function() {
-          return j(' ', 'left join', this.getDeclaration());
+          return this.getDeclPrefix('left join');
         }
       , getAliases: function() {
           return _.chain(this._getFields())
@@ -289,6 +281,17 @@ var Table = inherit('Table', Type
         }
       , applyToClauseSQL: function(clause) {
           return this.applyToClause(clause, 'getSQL', this.getTableName());
+        }
+      , getDeclaration: function() {
+          var p = [
+              this.name
+            , this.alias ? 'as ' + this.alias : false
+            , this.join ? 'on ' + this.join.getSQL(this.getTableName()) : false
+          ];
+          return compact(p).join(' ').trim();
+        }
+      , getDeclPrefix: function(prefix) {
+          return j(' ', prefix, this.getDeclaration());
         }
     }
 );
