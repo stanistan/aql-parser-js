@@ -173,6 +173,15 @@ var Query = inherit('Query', Sel
           return compact(re).join(' ');
 
         }
+      , getFieldsInfo: function() {
+          return this.mapTablesFn('getFieldsInfo').reduce(extend, {});
+        }
+      , getAliases: function() {
+          return concat(this.mapTablesFn('getAliases'));
+        }
+      , getFieldAliases: function() {
+          return concat(this.mapTablesFn('getFieldAliases'));
+        }
       , getWhere: function() {
           return concatj(' and ', this.mapTablesFn('getWhereSQL'));
         }
@@ -220,15 +229,16 @@ var Table = inherit('Table', Type
       ));
     }
   , {   getFieldsAsSQL: function() {
-          return _.chain(this._getFields())
-                  .map(withTable(getSQL, this.getTableName()))
-                  .compact()
-                  .value();
+          return compact(this._getFields().map(this.gs()));
         }
       , _getFields: function() {
-          return _.chain(this.selects).filter(function(t) {
-            return t.isa(Field);
-          });
+          return this.selects.filter(function(t) { return t.isa(Field); });
+        }
+      , _getFieldsNotExpr: function() {
+          return this._getFields().filter(notExpr);
+        }
+      , _getFieldsExpr: function() {
+          return _.difference(this._getFields(), this._getFieldsNotExpr());
         }
       , getTableName: function() {
           return this.alias || this.name
@@ -260,11 +270,19 @@ var Table = inherit('Table', Type
       , getJoin: function() {
           return this.getDeclPrefix('left join');
         }
+      , getFieldsInfo: function() {
+          return _.object(this.getFieldAliases(), this.getFieldNames());
+        }
+      , getFieldNames: function() {
+          var s = this.gs()
+            , f = function(t) { return s(t.name); };
+          return compact(this._getFieldsNotExpr().map(f));
+       }
       , getAliases: function() {
-          return _.chain(this._getFields())
-                  .map(function(t) { return t.alias ? t.alias.value : null; })
-                  .compact()
-                  .value()
+          return this._getFields().map(orAlias);
+        }
+      , getFieldAliases: function() {
+          return compact(this._getFieldsNotExpr().map(orAlias));
         }
       , getHavingSQL: function() {
           return this.applyToClauseSQL('having');
@@ -276,19 +294,19 @@ var Table = inherit('Table', Type
           return this.applyToClauseSQL('offset');
         }
       , applyToClause: function(clause, f) {
-          var args = [].slice.call(arguments, 2), cl = this.clauses[clause];
+          var args = [].slice.call(arguments, 2)
+            , cl = this.clauses[clause];
           return cl ? cl[f].apply(cl, args) : '';
         }
       , applyToClauseSQL: function(clause) {
           return this.applyToClause(clause, 'getSQL', this.getTableName());
         }
       , getDeclaration: function() {
-          var p = [
+          return jarr(' ', compact([
               this.name
             , this.alias ? 'as ' + this.alias : false
             , this.join ? 'on ' + this.join.getSQL(this.getTableName()) : false
-          ];
-          return compact(p).join(' ').trim();
+          ]));
         }
       , getDeclPrefix: function(prefix) {
           return j(' ', prefix, this.getDeclaration());
@@ -300,6 +318,14 @@ var Table = inherit('Table', Type
 
 var getSQLt = _.bind(withTable, null, getSQL);
 
+function notExpr(t) {
+  return !t.name.isa(Expr);
+}
+
+function orAlias(t) {
+  return t.alias ? t.alias.value : t.name.value;
+}
+
 function arrayify(arr) {
   return _.isArray(arr) ? arr : [arr];
 }
@@ -310,6 +336,10 @@ function rVal(val) {
 
 function rtValue() {
   return this.value;
+}
+
+function jarr(del, arr) {
+  return j.apply(null, unshift(arr, del));
 }
 
 function j(del) {
@@ -347,13 +377,17 @@ function concat(arr) {
 }
 
 function concatj(glue, arr) {
-  return j.apply(null, unshift(compact(concat(arr)), glue));
+  return jarr(glue, compact(concat(arr)));
 }
 
 function unshift(arr, thing) {
   var a = _.clone(arr);
   a.unshift(thing);
   return a;
+}
+
+function extend(a, b) {
+  return _.extend(a, b);
 }
 
 var types = {
