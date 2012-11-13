@@ -5,10 +5,6 @@ var parser = require('./../src/parser')
 
 var parse = _.bind(parser.parse, parser);
 
-describe('getAliases', function() {
-
-});
-
 describe('getting a list of fields', function() {
 
   var q = 'table { field, friend, bozo as clown } table2 { something, a - b as diff }'
@@ -31,7 +27,7 @@ describe('getting a list of fields', function() {
       , something: 'table2.something'
     };
 
-    expect(re.getFieldsInfo()).toEqual(e);
+    expect(re.getFieldInfo()).toEqual(e);
 
   });
 

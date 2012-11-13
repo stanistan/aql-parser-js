@@ -29,7 +29,7 @@ label on artist.id = artist_id {
     order by name
 }
 
-->>
+->
 
 select
     artist.name,
@@ -40,10 +40,60 @@ where artist.name ilike 'pink %'
 order by label.name
 ```
 
-see `sqlSpec` in tests for more usage.
+see `sqlSpec` in tests for more structure/usage.
 
 ## JS Usage
 
-(working on it)
+#### Simple
 
+```js
+var aql = require('aql');
+
+var statement = 'artist { name, count(*) as num_artists }';
+
+var query = aql.parse(statement); // will be a Query object
+
+query.getSQL(); // select artist.name, count(*) as num_artists from artist
+query.getJSON(); // a JSON representation of the query object
+
+// some data
+
+query.getAliases(); // ['name', 'num_artists']
+query.getFieldAliases(); // ['name']
+query.getFieldInfo(); // { 'name' : 'artist.name' }
 ```
+
+#### SQL Options
+
+Table constraints: (in progress)
+
+```js
+// given the previous AQL statement and query object
+
+var options = {
+    constraint: ['active', 1] // field, val
+};
+
+query.getSQL(options);
+// select artist.name, count(*) as num_artists from artist where artist.active = 1
+
+// with joins
+var statement = '\
+    artist {\
+        name\
+    }\
+    label on artist.id = artist_id {\
+        name as label_name\
+    }\
+';
+
+aql.parse(statement).getSQL(options);
+// select artist.name, label.name as label_name
+// from artist
+// left join label on artist.id = label.artist_id and label.active = 1
+// where artist.active = 1
+```
+
+### Other Uses:
+
+I'll get here eventually :)

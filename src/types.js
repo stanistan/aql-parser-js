@@ -2,12 +2,14 @@
 var _ = require('underscore')
   , u = require('./utils')
   , inherit = u.inherit
-  , Type = u.Type;
+  , Type = u.Type
+  , isType = u.isType
+  , j = u.j
+  , jarr = u.jarr;
 
 var Token = inherit('Token', Type
   , function(n) { this.value = n; }
-  , {   toJSON: function() { return this.value; }
-      , hasTableName: function() {
+  , {   hasTableName: function() {
           return typeof this.value == 'string'
             ? this.value.indexOf('.') > 0
             : true;
@@ -143,13 +145,16 @@ var Query = inherit('Query', Sel
   , {
         getSQL: function(options) {
 
+          options = options || {};
+          var constraints = u.arrArrayify(2, options.constraints || []);
+
           var f = function(t) { return t.getFieldsAsSQL().join(', '); }
-            , j = function(t) { return t.getJoin(); };
+            , j = function(t) { return t.getJoin(constraints); };
 
           var fields    = this.tables.map(f)
             , from      = this.tables[0].getFrom()
             , joins     = _.rest(_.clone(this.tables)).map(j).join(' ').trim()
-            , where     = this.getWhere()   || null
+            , where     = this.getWhere(constraints)   || null
             , order_by  = this.getOrderBy() || null
             , group_by  = this.getGroupBy() || null
             , having    = this.getHaving()  || null
@@ -159,7 +164,7 @@ var Query = inherit('Query', Sel
 
           var re = [
             , 'select'
-            , compact(fields).join(', ')
+            , u.compact(fields).join(', ')
             , from
             , joins
             , where     ? 'where '    + where     : ''
@@ -170,42 +175,51 @@ var Query = inherit('Query', Sel
             , offset    ? 'offset '   + offset    : ''
           ];
 
-          return compact(re).join(' ');
+          return u.compact(re).join(' ');
 
         }
-      , getFieldsInfo: function() {
-          return this.mapTablesFn('getFieldsInfo').reduce(extend, {});
+      , getJSON: function() {
+          return JSON.stringify(this);
+        }
+      , getFieldInfo: function() {
+          return this.mapTablesFn('getFieldInfo').reduce(u.extend, {});
         }
       , getAliases: function() {
-          return concat(this.mapTablesFn('getAliases'));
+          return u.concat(this.mapTablesFn('getAliases'));
         }
       , getFieldAliases: function() {
-          return concat(this.mapTablesFn('getFieldAliases'));
+          return u.concat(this.mapTablesFn('getFieldAliases'));
         }
-      , getWhere: function() {
-          return concatj(' and ', this.mapTablesFn('getWhereSQL'));
+      , getWhere: function(constraints) {
+          // first table with constraints
+          var ts = [this.tables[0].getWhereSQL(constraints)];
+          return u.concatj(
+              ' and '
+            , u.concat(ts, _.rest(this.mapTablesFn('getWhereSQL')))
+          );
         }
       , getOrderBy: function() {
-          return concatj(', ', this.mapTablesFn('getOrderBySQL'));
+          return u.concatj(', ', this.mapTablesFn('getOrderBySQL'));
         }
       , getGroupBy: function() {
-          return concatj(', ', this.mapTablesFn('getGroupBySQL'));
+          return u.concatj(', ', this.mapTablesFn('getGroupBySQL'));
         }
       , getHaving: function() {
-          return concatj(' and ', this.mapTablesFn('getHavingSQL'))
+          return u.concatj(' and ', this.mapTablesFn('getHavingSQL'))
         }
       , getLimit: function() {
-          return _.last(compact(this.mapTablesFn('getLimitSQL')));
+          return _.last(u.compact(this.mapTablesFn('getLimitSQL')));
         }
       , getOffset: function() {
-          return _.last(compact(this.mapTablesFn('getOffsetSQL')));
+          return _.last(u.compact(this.mapTablesFn('getOffsetSQL')));
         }
       , mapTables: function(f) {
           return this.tables.map(f);
         }
       , mapTablesFn: function(f_name) {
+          var args = [].slice.call(arguments, 1);
           return this.mapTables(function(t) {
-            return t[f_name]();
+            return t[f_name].apply(t, args);
           });
         }
       , mapTablesProp: function(prop) {
@@ -229,7 +243,7 @@ var Table = inherit('Table', Type
       ));
     }
   , {   getFieldsAsSQL: function() {
-          return compact(this._getFields().map(this.gs()));
+          return u.compact(this._getFields().map(this.gs()));
         }
       , _getFields: function() {
           return this.selects.filter(function(t) { return t.isa(Field); });
@@ -243,8 +257,9 @@ var Table = inherit('Table', Type
       , getTableName: function() {
           return this.alias || this.name
         }
-      , getWhereSQL: function() {
-          return this.applyToClauseSQL('where');
+      , getWhereSQL: function(constraint) {
+          var wh = this.withConstraint(constraint, this.clauses.where);
+          return wh ? wh.getSQL(this.getTableName()) : '';
         }
       , getOrderBySQL: function() {
           return this.mapByClauseSQL('order_by');
@@ -256,33 +271,33 @@ var Table = inherit('Table', Type
           return this.mapByClauseSQL('group_by');
         }
       , mapByClause: function(clause, f) {
-          return compact(this.clauses[clause] || []).map(f);
+          return u.compact(this.clauses[clause] || []).map(f);
         }
       , mapByClauseSQL: function(clause) {
           var s = this.gs();
           return this.mapByClause(clause, function(e) {
-            return compact(arrayify(e).map(s)).join(' ');
+            return u.compact(u.arrayify(e).map(s)).join(' ');
           });
         }
       , getFrom: function() {
           return this.getDeclPrefix('from');
         }
-      , getJoin: function() {
-          return this.getDeclPrefix('left join');
+      , getJoin: function(constraint) {
+          return this.getDeclPrefix('left join', constraint || []);
         }
-      , getFieldsInfo: function() {
+      , getFieldInfo: function() {
           return _.object(this.getFieldAliases(), this.getFieldNames());
         }
       , getFieldNames: function() {
           var s = this.gs()
             , f = function(t) { return s(t.name); };
-          return compact(this._getFieldsNotExpr().map(f));
+          return u.compact(this._getFieldsNotExpr().map(f));
        }
       , getAliases: function() {
           return this._getFields().map(orAlias);
         }
       , getFieldAliases: function() {
-          return compact(this._getFieldsNotExpr().map(orAlias));
+          return u.compact(this._getFieldsNotExpr().map(orAlias));
         }
       , getHavingSQL: function() {
           return this.applyToClauseSQL('having');
@@ -301,15 +316,25 @@ var Table = inherit('Table', Type
       , applyToClauseSQL: function(clause) {
           return this.applyToClause(clause, 'getSQL', this.getTableName());
         }
-      , getDeclaration: function() {
-          return jarr(' ', compact([
+      , getDeclaration: function(constraint) {
+          var j = this.withConstraint(constraint, this.join);
+          return jarr(' ', u.compact([
               this.name
             , this.alias ? 'as ' + this.alias : false
-            , this.join ? 'on ' + this.join.getSQL(this.getTableName()) : false
+            , j ? 'on ' + j.getSQL(this.getTableName()) : false
           ]));
         }
-      , getDeclPrefix: function(prefix) {
-          return j(' ', prefix, this.getDeclaration());
+      , getDeclPrefix: function(prefix, constraint) {
+          return j(' ', prefix, this.getDeclaration(constraint));
+        }
+      , withConstraint: function(constraint, e) {
+          var c = this.prepConstraint(constraint);
+          if (!c) return e;
+          return !!e ? new CombExpr('and', c, e) : c;
+        }
+      , prepConstraint: function(constraint) {
+          var exps = u.compact(constraint).map(pairToEqExpr);
+          return !!exps.length ? exps.reduce(andExpr) : null;
         }
     }
 );
@@ -317,6 +342,22 @@ var Table = inherit('Table', Type
 // helpers
 
 var getSQLt = _.bind(withTable, null, getSQL);
+
+function pairToEqExpr(arr) {
+  return toEqExpr(arr[0], arr[1]);
+}
+
+function andExpr(l, r) {
+  return new CombExpr('and', l, r);
+}
+
+function toEqExpr(k, v) {
+  return new EqExpr(
+      '='
+    , new Token(k)
+    , new LitToken( typeof v === 'string' ? '"' + v + '"' : v )
+  );
+}
 
 function notExpr(t) {
   return !t.name.isa(Expr);
@@ -326,24 +367,12 @@ function orAlias(t) {
   return t.alias ? t.alias.value : t.name.value;
 }
 
-function arrayify(arr) {
-  return _.isArray(arr) ? arr : [arr];
-}
-
 function rVal(val) {
   return _.bind(rtValue, { value: val });
 }
 
 function rtValue() {
   return this.value;
-}
-
-function jarr(del, arr) {
-  return j.apply(null, unshift(arr, del));
-}
-
-function j(del) {
-  return compact([].slice.call(arguments, 1)).join(del).trim();
 }
 
 function getSQL(table, thing) {
@@ -360,34 +389,6 @@ function getSQL(table, thing) {
 
 function withTable(f, table) {
   return _.bind(f, null, table);
-}
-
-function isType(t) {
-  return t && _.isObject(t) && t instanceof Type;
-};
-
-function compact(arr) {
-  return _.filter(arr, function(p) {
-    return !!p || p === 0;
-  });
-}
-
-function concat(arr) {
-  return [].concat.apply([], arr);
-}
-
-function concatj(glue, arr) {
-  return jarr(glue, compact(concat(arr)));
-}
-
-function unshift(arr, thing) {
-  var a = _.clone(arr);
-  a.unshift(thing);
-  return a;
-}
-
-function extend(a, b) {
-  return _.extend(a, b);
 }
 
 var types = {
@@ -420,4 +421,3 @@ var types = {
 exports.types = types;
 exports.inherits = _.bind(u.inheritsTypes, null, types);
 exports = _.extend(exports, types);
-exports.isType = isType;

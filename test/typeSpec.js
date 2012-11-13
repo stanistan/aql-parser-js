@@ -5,7 +5,7 @@ var t = require('./../src/types')
 
 describe('isType', function() {
 
-  var i = t.isType;
+  var i = u.isType;
 
   it('should be false for non-objects', function() {
     expect(i(3)).toBe(false);
@@ -28,7 +28,7 @@ var ts = ['Field', 'Ref', 'SingleRef', 'PluralRef', 'Query', 'Table', 'Expr', 'S
 
 describe('parser types', function() {
 
-  var i = t.isType;
+  var i = u.isType;
 
   ts.forEach(function(type) {
     it('should all be types!', function() {
@@ -52,7 +52,7 @@ describe('type inheritence', function() {
 
       it(text, function() {
         var ins = new t[thing]('something');
-        expect(t.isType(ins)).toBe(true);
+        expect(u.isType(ins)).toBe(true);
         expect(ins.isa(type)).toBe(true);
       });
 
@@ -64,7 +64,7 @@ describe('type inheritence', function() {
 
       it(text, function() {
         var ins = new t[thing]('something');
-        expect(t.isType(ins)).toBe(true);
+        expect(u.isType(ins)).toBe(true);
         expect(ins.isa(type)).toBe(false);
       });
 

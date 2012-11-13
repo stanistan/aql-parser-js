@@ -1,6 +1,7 @@
 
 var parser = require('./../src/parser')
   , _ = require('underscore')
+  , u = require('./../src/utils')
   , t = require('./../src/types')
   , parse = function(text) {
       return parser.parse(text);
@@ -23,14 +24,14 @@ parsed.forEach(function(re, k) {
 
     it('should be an object', function() {
       expect(_.isObject(re)).toBe(true);
-      expect(t.isType(re)).toBe(true);
+      expect(u.isType(re)).toBe(true);
     });
 
     it('query definition should have an array of tables', function() {
       expect(_.isArray(re.tables)).toBe(true);
       re.tables.forEach(function(a) {
         expect(_.isObject(a)).toBe(true);
-        expect(t.isType(a)).toBe(true);
+        expect(u.isType(a)).toBe(true);
         expect(a.isa(t.Table)).toBe(true);
       });
     });

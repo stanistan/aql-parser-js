@@ -11,6 +11,7 @@
         "jasmine-node": "1.0.x"
    }
   , "engine": "node >= 0.8.11"
+  , "main": "./src/aql.js"
   , "scripts": {
         "test": "jasmine-node ./test"
       , "gen-parser": "node_modules/.bin/jison src/aql.jison src/aql.jisonlex -o src/parser.js"

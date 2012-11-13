@@ -87,6 +87,72 @@ function toObjectPrefix(els, prefix) {
   return toObject(els, function(e) { return prefix + e; });
 }
 
+function compact(arr) {
+  return _.filter(arr, function(p) {
+    return !!p || p === 0;
+  });
+}
+
+function isType(t) {
+  return t && _.isObject(t) && t instanceof Type;
+};
+
+function concat(arr) {
+  return [].concat.apply([], arr);
+}
+
+function concatj(glue, arr) {
+  return jarr(glue, compact(concat(arr)));
+}
+
+function unshift(arr, thing) {
+  var a = _.clone(arr);
+  a.unshift(thing);
+  return a;
+}
+
+function extend(a, b) {
+  return _.extend(a, b);
+}
+
+function jarr(del, arr) {
+  return j.apply(null, unshift(arr, del));
+}
+
+function j(del) {
+  return compact([].slice.call(arguments, 1)).join(del).trim();
+}
+
+function arrayify(arr) {
+  return _.isArray(arr) ? arr : [arr];
+}
+
+function arrArrayify(step, arr) {
+  return _.isArray(_.first(arr)) ? arr : partition(arr, step);
+}
+
+function partition(arr, step) {
+  var i = 0, acc = [], tmp = []
+    , push = function() { acc.push(tmp); tmp = []; };
+  arr.forEach(function(v) {
+    i++; tmp.push(v);
+    if (i % step == 0) push();
+  });
+  if (tmp.length) push();
+  return acc;
+}
+
 exports.inheritsTypes = inheritsTypes;
 exports.inherit = inherit;
 exports.Type = Type;
+exports.arrArrayify = arrArrayify;
+exports.arrayify = arrayify;
+exports.j = j;
+exports.jarr = jarr;
+exports.extend = extend;
+exports.unshift = unshift;
+exports.concat = concat;
+exports.concatj = concatj;
+exports.partition = partition;
+exports.isType = isType;
+exports.compact = compact;

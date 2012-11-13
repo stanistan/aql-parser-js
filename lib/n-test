@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-clear && npm run-script build-test
