@@ -35,8 +35,8 @@ describe('constraints', function() {
            where a.active = 1' ]
     , [   'passes to subqeries'
         , 'a { field where s in (table { id }) }'
-        , 'select a.field where a.active = 1 and a.s in \
-           (select table.id from table where table.active = 1' ]
+        , 'select a.field from a where a.active = 1 and a.s in \
+           (select table.id from table where table.active = 1)' ]
   ];
 
   runTests(tests);
