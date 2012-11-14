@@ -103,3 +103,22 @@ aql.parse(statement).getSQL(options);
 ### Other Uses:
 
 I'll get here eventually :)
+
+## Buildling the Parser
+
+##### In the root project directory:
+
+This will generate `src/parser.js` and report any conflicts
+
+```
+npm run-script gen-parser
+```
+
+This will generate the parser and run the tests.
+
+*Note:* This overrides the current parser, so when changing the grammar,
+do this in another branch.
+
+```
+npm run-script build-test
+```

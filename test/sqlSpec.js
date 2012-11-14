@@ -1,7 +1,10 @@
 
 var parser = require('./../src/parser')
   , _ = require('underscore')
-  , t = require('./../src/types');
+  , t = require('./../src/types')
+  , u = require('./utils');
+
+var runTests = u.runWithOpts();
 
 describe('basic query', function() {
 
@@ -261,27 +264,3 @@ describe('all-in-all query', function() {
   runTests(ts);
 
 });
-
-function runTests(arr) {
-  arr.forEach(function(t) {
-    runFor.apply(null, t);
-  });
-}
-
-function runFor(descr, q, r) {
-  it(descr, function() {
-    qr(q, r);
-  });
-}
-
-function qr(query, result) {
-  expect(sql(query)).toEqual(result.replace(/[\r\n]|\s+/g, ' '));
-}
-
-function sql(query) {
-  return parse(query).getSQL();
-}
-
-function parse(query) {
-  return parser.parse(query);
-}
