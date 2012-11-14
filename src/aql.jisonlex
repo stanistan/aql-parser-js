@@ -21,6 +21,7 @@ dgd [0-9.]
 "."                       return 'PERIOD';
 ","                       return 'COMMA';
 "~"                       return 'TILDE';
+"||"                      return 'CONCAT';
 
 ("true"|"false")          return 'BOOL';
 "null"                    return 'NULL';
@@ -48,6 +49,8 @@ dgd [0-9.]
 "and"                     return 'AND';
 "is"                      return 'IS';
 "or"                      return 'OR';
+
+"interval"                return 'INTERVAL';
 
 "as"                      return 'AS';
 "on"                      return 'ON';

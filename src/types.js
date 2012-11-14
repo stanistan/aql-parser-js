@@ -91,7 +91,7 @@ var CondExpr = inherit('CondExpr', Expr
 var FnExpr = inherit('FnExpr', Expr
   , function(name, args) {
       this.name = name;
-      this.args = args;
+      this.args = args || [];
     }
   , {   getSQL: function(opts) {
           return j('', this.name, '(', this.args.map(getSQLt(opts)).join(', '), ')');

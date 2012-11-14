@@ -16,9 +16,10 @@ function makeBody() {
 %left MINUS PLUS
 %left STAR DIV
 %right OR AND
-%left EQ LIKE ILIKE IN GTE GT LTE LT IS
+%left EQ LIKE ILIKE IN GTE GT LTE LT IS CONCAT
 %left NOT
 %left VAR AS ON
+%left INTERVAL
 
 %start statement
 
@@ -139,11 +140,14 @@ e
   | LPAREN es RPAREN      -> $2
   | NOT e                 -> new t.NegExpr($2)
   | VAR LPAREN es RPAREN  -> new t.FnExpr($1, $es)
+  | VAR LPAREN RPAREN     -> new t.FnExpr($1);
+  | INTERVAL e            -> new t.CombExpr('', new t.LitToken('interval'), $2)
   | e MINUS e             -> new t.ArithExpr('-', $1, $3)
   | e PLUS e              -> new t.ArithExpr('+', $1, $3)
   | e STAR e              -> new t.ArithExpr('*', $1, $3)
   | e DIV e               -> new t.ArithExpr('/', $1, $3)
   | e AND e               -> new t.CombExpr('AND', $1, $3)
+  | e CONCAT e            -> new t.CombExpr('||', $1, $3)
   | e OR e                -> new t.CombExpr('OR', $1, $3)
   | e ILIKE e             -> new t.EqExpr('ILIKE', $1, $3)
   | e LIKE e              -> new t.EqExpr('LIKE', $1, $3)

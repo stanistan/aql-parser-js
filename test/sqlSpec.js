@@ -219,7 +219,7 @@ describe('offset', function() {
 
 });
 
-describe('all-in-all query', function() {
+describe('all-in-all query, odd expressions', function() {
 
   var ts = [
       [   'having many clauses'
@@ -259,6 +259,12 @@ describe('all-in-all query', function() {
            order by table.id\
            limit 1\
            offset 100' ]
+    , [   'concatenation'
+        , 'table { a || " " || c as b }'
+        , 'select table.a || " " || table.c as b from table' ]
+    , [   'interval'
+        , 'event { name where start_date < now() - interval \'1 day\' }'
+        , 'select event.name from event where event.start_date < now() - interval \'1 day\'' ]
   ];
 
   runTests(ts);
