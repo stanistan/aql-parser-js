@@ -1,6 +1,6 @@
 {
     "name": "aql-parser"
-  , "version": "0.0.1"
+  , "version": "0.0.2"
   , "description": "A parser for AQL in node using jison."
   , "author": "Stan Rozenraukh <stan@stanistan.com>"
   , "dependencies": {

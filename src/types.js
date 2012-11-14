@@ -256,19 +256,19 @@ var Table = inherit('Table', Type
       , _getFieldsExpr: function() {
           return _.difference(this._getFields(), this._getFieldsNotExpr());
         }
-      , getTableName: function() {
+      , getTableOptions: function() {
           return _.extend(this.options || {}, { table: this.alias || this.name });
         }
       , getWhereSQL: function() {
           var constraint = this.primary ? this.options.constraints : []
             , wh = withConstraint(constraint || [], this.clauses.where);
-          return wh ? wh.getSQL(this.getTableName()) : '';
+          return wh ? wh.getSQL(this.getTableOptions()) : '';
         }
       , getOrderBySQL: function() {
           return this.mapByClauseSQL('order_by');
         }
       , gs: function() {
-          return getSQLt(this.getTableName());
+          return getSQLt(this.getTableOptions());
         }
       , getGroupBySQL: function() {
           return this.mapByClauseSQL('group_by');
@@ -317,14 +317,14 @@ var Table = inherit('Table', Type
           return cl ? cl[f].apply(cl, args) : '';
         }
       , applyToClauseSQL: function(clause) {
-          return this.applyToClause(clause, 'getSQL', this.getTableName());
+          return this.applyToClause(clause, 'getSQL', this.getTableOptions());
         }
       , getDeclaration: function(constraint) {
           var j = withConstraint(constraint, this.join);
           return jarr(' ', u.compact([
               this.name
             , this.alias ? 'as ' + this.alias : false
-            , j ? 'on ' + j.getSQL(this.getTableName()) : false
+            , j ? 'on ' + j.getSQL(this.getTableOptions()) : false
           ]));
         }
       , getDeclPrefix: function(prefix, constraint) {
