@@ -148,6 +148,7 @@ var Query = inherit('Query', Sel
 
           options = options || {};
           options.constraints = u.arrArrayify(2, options.constraints || []);
+          options.fields = options.fields || function() { return {} };
 
           this.options = options;
           this.tables.map(function(t) {
@@ -245,7 +246,13 @@ var Table = inherit('Table', Type
       ));
     }
   , {   getFieldsAsSQL: function() {
-          return u.compact(this._getFields().map(this.gs()));
+          var fs = u.concat([this.getDefaultFields(), this._getFields()]);
+          return u.compact(fs).map(this.gs());
+        }
+      , getDefaultFields: function() {
+          return _.map(this.options.fields(this), function(v, k) {
+            return new Field(new Token(k), new LitToken(v));
+          });
         }
       , _getFields: function() {
           return this.selects.filter(function(t) { return t.isa(Field); });

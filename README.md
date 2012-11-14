@@ -71,7 +71,7 @@ query.getFieldInfo(); // { 'name' : 'artist.name' }
 
 #### SQL Options
 
-Table constraints: (in progress)
+Table constraints:
 
 ```js
 // given the previous AQL statement and query object
@@ -95,6 +95,27 @@ var statement = '\
 
 aql.parse(statement).getSQL(options);
 // select artist.name, label.name as label_name
+// from artist
+// left join label on artist.id = label.artist_id and label.active = 1
+// where artist.active = 1
+```
+
+Default fields:
+
+```js
+var options = {
+    constraints: ['active', 1]
+  , fields: function(table) {
+      return { id: table.name + '_id' };
+    }
+};
+
+aql.parse(statement).getSQL(options);
+// select
+//  artist.id as artist_id,
+//  artist.name,
+//  label.id as label_id,
+//  label.name as label_name
 // from artist
 // left join label on artist.id = label.artist_id and label.active = 1
 // where artist.active = 1
