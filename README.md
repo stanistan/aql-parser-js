@@ -1,6 +1,6 @@
 # AQL Parser
 
-*Abbreviated Query Language* for genearting data models (possibly for an ORM)
+*Abbreviated Query Language* for generating data models (possibly for an ORM)
 and making writing select queries easier.
 
 [![Build Status](https://secure.travis-ci.org/stanistan/aql-parser-js.png?branch=master)](https://travis-ci.org/stanistan/aql-parser-js)
