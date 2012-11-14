@@ -7,6 +7,12 @@ and making writing select queries easier.
 
 (Using [jison](https://github.com/zaach/jison) as a parser generator.)
 
+## Install
+
+```
+npm install aql-parser
+```
+
 ## AQL Syntax
 
 A basic introduction.
