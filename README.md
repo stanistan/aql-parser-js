@@ -53,7 +53,7 @@ see `sqlSpec` in tests for more structure/usage.
 #### Simple
 
 ```js
-var aql = require('aql');
+var aql = require('aq-parser');
 
 var statement = 'artist { name, count(*) as num_artists }';
 
