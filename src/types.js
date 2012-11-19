@@ -146,9 +146,17 @@ var Query = inherit('Query', Sel
   , {
         getSQL: function(options) {
 
-          options = options || {};
+          options = _.extend(options || {}, _.reduce(u.slice(arguments, 1), u.extend, {}));
           options.constraints = u.arrArrayify(2, options.constraints || []);
           options.fields = options.fields || function() { return {} };
+
+          var clauses = ['where', 'order_by', 'group_by', 'having', 'limit', 'offset'];
+
+          var cl = {};
+          clauses.forEach(function(a) {
+            cl[a] = u.slice(u.arrayify(options[a] || []));
+            delete options[a];
+          });
 
           this.options = options;
           this.tables.map(function(t) {
@@ -161,12 +169,12 @@ var Query = inherit('Query', Sel
           var fields    = this.tables.map(f)
             , from      = this.tables[0].getFrom()
             , joins     = _.rest(_.clone(this.tables)).map(j).join(' ').trim()
-            , where     = this.getWhere()   || null
-            , order_by  = this.getOrderBy() || null
-            , group_by  = this.getGroupBy() || null
-            , having    = this.getHaving()  || null
-            , limit     = this.getLimit()   || null
-            , offset    = this.getOffset()  || null;
+            , where     = this.getWhere(cl.where)       || null
+            , order_by  = this.getOrderBy(cl.order_by)  || null
+            , group_by  = this.getGroupBy(cl.group_by)  || null
+            , having    = this.getHaving(cl.having)     || null
+            , limit     = this.getLimit(cl.limit)       || null
+            , offset    = this.getOffset(cl.offset)     || null;
 
 
           var re = [
@@ -205,8 +213,39 @@ var Query = inherit('Query', Sel
       , getFieldAliases: function() {
           return u.concat(this.mapTablesFn('getFieldAliases'));
         }
-      , getWhere: function(constraints) {
-          return u.concatj(' and ', this.mapTablesFn('getWhereSQL'));
+      , getWhere: function(where) {
+
+          var s = getSQLt(this.tables[0].getTableOptions())
+            , fields = this.getFieldInfo()
+            , nd = ' and '
+            , pj = _.bind(u.concatj, null, nd);
+
+          where = !!where.length ? nd + u.concatj(nd, where.map(checkEach)) : '';
+          return pj(this.mapTablesFn('getWhereSQL')) + where;
+
+          function checkEach(a) {
+
+            var comb;
+
+            if (_.isObject(a) && !_.isArray(a) && !isType(a)) {
+              return pj(_.pairs(a).map(checkEach));
+            }
+
+            if (_.isString(a)) {
+              return a;
+            }
+
+            if (_.isArray(a)) {
+              comb = a.length === 3 ? a[1] : '=';
+              return s(toEqExpr(orField(a[0]), _.last(a), comb));
+            }
+
+            return s(a);
+          }
+
+          function orField(t) {
+            return (t in fields) ? fields[t] : t;
+          }
         }
       , getOrderBy: function() {
           return u.concatj(', ', this.mapTablesFn('getOrderBySQL'));
@@ -227,7 +266,7 @@ var Query = inherit('Query', Sel
           return this.tables.map(f);
         }
       , mapTablesFn: function(f_name) {
-          var args = [].slice.call(arguments, 1);
+          var args = u.slice(arguments, 1);
           return this.mapTables(function(t) {
             return t[f_name].apply(t, args);
           });
@@ -327,7 +366,7 @@ var Table = inherit('Table', Type
           return this.applyToClauseSQL('offset');
         }
       , applyToClause: function(clause, f) {
-          var args = [].slice.call(arguments, 2)
+          var args = u.slice(arguments, 2)
             , cl = this.clauses[clause];
           return cl ? cl[f].apply(cl, args) : '';
         }
@@ -371,11 +410,11 @@ function andExpr(l, r) {
   return new CombExpr('and', l, r);
 }
 
-function toEqExpr(k, v) {
+function toEqExpr(k, v, comb) {
   return new EqExpr(
-      '='
+      comb || '='
     , new Token(k)
-    , new LitToken( typeof v === 'string' ? '"' + v + '"' : v )
+    , new LitToken( typeof v === 'string' ? "'" + v + "'" : v )
   );
 }
 

@@ -66,7 +66,7 @@ describe('fields', function() {
            (select field.id as field_id from field)' ]
   ];
 
-  runTests(tests);
+  // runTests(tests);
 
 });
 
@@ -108,6 +108,37 @@ describe('constraint AND fields', function() {
            where artist.active = 1' ]
   ];
 
-  u.runWithOpts(opts)(tests);
+  // u.runWithOpts(opts)(tests);
+
+});
+
+describe('with where', function() {
+
+  var q = 'artist { name } label { id }'
+    , par = new aql.Parser({constraints: ['active', 1]})
+    , p = par.parse(q);
+
+  var wheres = [
+      ['artist.name = \'Pink Floyd\' and label.id = 10']
+    , ['artist.name = \'Pink Floyd\'', 'label.id = 10']
+    , [['artist.name', 'Pink Floyd'], ['label.id', 10]]
+    , [['name', 'Pink Floyd'], ['id', 10]]
+    , [{ name: 'Pink Floyd' }, { id: 10 }]
+    , { name: 'Pink Floyd', id: 10 }
+  ];
+
+
+  var prev = 'select artist.name, \
+              label.id from artist \
+              left join label on label.active = 1 \
+              where artist.active = 1 \
+              and artist.name = \'Pink Floyd\' and label.id = 10';
+  wheres.forEach(function(wh, i) {
+    it('should be the same as the prev clause::' + i, function() {
+      var f = function() { return p.getSQL({ where: wh }); };
+      u.compare(f, null, prev);
+      prev = f();
+    });
+  });
 
 });

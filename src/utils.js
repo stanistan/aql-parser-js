@@ -18,7 +18,7 @@ function inherit(n, from, f, methods) {
 
     // use the parent constructor
     f = function() {
-      from.apply(this, [].slice.call(arguments));
+      from.apply(this, slice(arguments));
     };
 
   }
@@ -120,7 +120,7 @@ function jarr(del, arr) {
 }
 
 function j(del) {
-  return compact([].slice.call(arguments, 1)).join(del).trim();
+  return compact(slice(arguments, 1)).join(del).trim();
 }
 
 function arrayify(arr) {
@@ -142,6 +142,10 @@ function partition(arr, step) {
   return acc;
 }
 
+function slice(thing) {
+  return [].slice.apply(thing, [].slice.call(arguments, 1));
+}
+
 exports.inheritsTypes = inheritsTypes;
 exports.inherit = inherit;
 exports.Type = Type;
@@ -156,3 +160,4 @@ exports.concatj = concatj;
 exports.partition = partition;
 exports.isType = isType;
 exports.compact = compact;
+exports.slice = slice;
