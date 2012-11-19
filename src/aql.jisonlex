@@ -25,7 +25,9 @@ dgd [0-9.]
 
 ("true"|"false")          return 'BOOL';
 "null"                    return 'NULL';
-"not"                     return "NOT";
+"not"                     return 'NOT';
+
+"distinct"                return 'DISTINCT';
 
 "*"                       return 'STAR';
 "-"                       return 'MINUS';

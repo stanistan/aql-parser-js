@@ -171,6 +171,7 @@ var Query = inherit('Query', Sel
 
           var re = [
             , 'select'
+            , u.compact(this.getDistinct(this.tables[0])).join(' ').trim()
             , u.compact(fields).join(', ')
             , from
             , joins
@@ -184,6 +185,13 @@ var Query = inherit('Query', Sel
 
           return u.compact(re).join(' ');
 
+        }
+      , getDistinct: function(primary_table) {
+          var opt = primary_table.getTableOptions()
+            , dis = _.isArray(this.distinct)
+                  ? j(' ', 'on', getSQL(opt, this.distinct))
+                  : null;
+          return this.distinct ? ['distinct', dis ] : [];
         }
       , getJSON: function() {
           return JSON.stringify(this);
@@ -390,6 +398,10 @@ function rtValue() {
 function getSQL(opts, thing) {
   if (_.isArray(thing)) {
     return '(' + thing.map(getSQLt(opts)).join(', ') + ')'
+  }
+
+  if (_.isBoolean(thing)) {
+    return '';
   }
 
   if (!isType(thing)) {

@@ -31,6 +31,12 @@ statement
 
 query
   : table_defs -> new t.Query($table_defs)
+  | distinct_e table_defs -> _.extend(new t.Query($table_defs), { distinct: $distinct_e })
+  ;
+
+distinct_e
+  : DISTINCT -> true
+  | DISTINCT ON LPAREN es RPAREN -> $es
   ;
 
 queries

@@ -270,3 +270,18 @@ describe('all-in-all query, odd expressions', function() {
   runTests(ts);
 
 });
+
+describe('distinct and distinct on', function() {
+
+  var ts = [
+      [   'minimal'
+        , 'distinct artist { name }'
+        , 'select distinct artist.name from artist' ]
+    , [   'distinct on'
+        , 'distinct on (name) artist { id }'
+        , 'select distinct on (artist.name) artist.id from artist' ]
+  ];
+
+  runTests(ts);
+
+});
