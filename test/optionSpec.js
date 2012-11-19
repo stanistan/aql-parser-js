@@ -112,6 +112,18 @@ describe('constraint AND fields', function() {
 
 });
 
+describe('other types of joins!', function() {
+
+  var joins = ['full', 'left', 'outer', 'inner', 'full outer', 'outer left']
+    , q = 'a { } b { }';
+
+  joins.forEach(function(type) {
+    var t = [ type + ' join', q, 'select from a ' + type + ' join b' ];
+    u.runWithOpts({ joinType: type})([t]);
+  });
+
+});
+
 describe('with where', function() {
 
   var q = 'artist { name } label { id }'

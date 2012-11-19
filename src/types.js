@@ -149,6 +149,7 @@ var Query = inherit('Query', Sel
           options = _.extend(options || {}, _.reduce(u.slice(arguments, 1), u.extend, {}));
           options.constraints = u.arrArrayify(2, options.constraints || []);
           options.fields = options.fields || function() { return {} };
+          options.joinType = options.joinType || 'left';
 
           var clauses = ['where', 'order_by', 'group_by', 'having', 'limit', 'offset'];
 
@@ -340,7 +341,10 @@ var Table = inherit('Table', Type
           return this.getDeclPrefix('from');
         }
       , getJoin: function() {
-          return this.getDeclPrefix('left join', this.options.constraints || []);
+          return this.getDeclPrefix(
+              this.options.joinType + ' join'
+            , this.options.constraints || []
+          );
         }
       , getFieldInfo: function() {
           return _.object(this.getFieldAliases(), this.getFieldNames());
