@@ -170,15 +170,25 @@ describe('with order by', function() {
     , { name: 'desc', bio: 'asc'}
   ];
 
-  var prev = 'select artist.name from artist where artist.active = 1\
-              order by artist.name desc, artist.bio asc';
+  (function() {
+      var prev = 'select artist.name from artist where artist.active = 1\
+                  order by artist.name desc, artist.bio asc';
+      withPrefix('testing order by with active', clauses, p, prev);
+  })();
 
+  (function() {
+    var prev = 'select artist.name from artist order by artist.name desc, artist.bio asc';
+    withPrefix('testing order by without active', clauses, aql.parse(q), prev);
+  })();
+
+});
+
+function withPrefix(prefix, clauses, parse, result) {
   clauses.forEach(function(cl, i) {
-    it('should be the same as the previous order by iteration:' + i, function() {
-      var f = function() { return p.getSQL({ order_by: cl }); };
-      u.compare(f, null, prev);
+    it(prefix + i, function() {
+      var f = function() { return parse.getSQL({ order_by: cl }); };
+      u.compare(f, null, result);
       prev = f();
     });
   });
-
-});
+}
