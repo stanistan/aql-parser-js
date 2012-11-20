@@ -124,11 +124,12 @@ describe('other types of joins!', function() {
 
 });
 
+var w_active = new aql.Parser({ constraints: ['active', 1] });
+
 describe('with where', function() {
 
   var q = 'artist { name } label { id }'
-    , par = new aql.Parser({constraints: ['active', 1]})
-    , p = par.parse(q);
+    , p = w_active.parse(q);
 
   var wheres = [
       ['artist.name = \'Pink Floyd\' and label.id = 10']
@@ -139,15 +140,42 @@ describe('with where', function() {
     , { name: 'Pink Floyd', id: 10 }
   ];
 
-
   var prev = 'select artist.name, \
               label.id from artist \
               left join label on label.active = 1 \
               where artist.active = 1 \
               and artist.name = \'Pink Floyd\' and label.id = 10';
+
   wheres.forEach(function(wh, i) {
-    it('should be the same as the prev clause::' + i, function() {
+    it('should be the same as the prev clause iteration:' + i, function() {
       var f = function() { return p.getSQL({ where: wh }); };
+      u.compare(f, null, prev);
+      prev = f();
+    });
+  });
+
+});
+
+describe('with order by', function() {
+
+  var q = 'artist { name }'
+    , p = w_active.parse(q);
+
+  var clauses = [
+      ['artist.name desc, artist.bio asc']
+    , ['artist.name desc', 'artist.bio asc']
+    , [['artist.name', 'desc'], ['artist.bio', 'asc']]
+    , [['name', 'desc'], ['bio', 'asc']]
+    , [ {name: 'desc'}, { bio: 'asc'} ]
+    , { name: 'desc', bio: 'asc'}
+  ];
+
+  var prev = 'select artist.name from artist where artist.active = 1\
+              order by artist.name desc, artist.bio asc';
+
+  clauses.forEach(function(cl, i) {
+    it('should be the same as the previous order by iteration:' + i, function() {
+      var f = function() { return p.getSQL({ order_by: cl }); };
       u.compare(f, null, prev);
       prev = f();
     });

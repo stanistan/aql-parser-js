@@ -214,57 +214,52 @@ var Query = inherit('Query', Sel
       , getFieldAliases: function() {
           return u.concat(this.mapTablesFn('getFieldAliases'));
         }
+      , getPrimaryTableOpts: function() {
+          return this.tables[0].getTableOptions();
+        }
+      , gs: function() {
+          return getSQLt(this.getPrimaryTableOpts());
+        }
+      , fs: function() {
+          return _.bind(orField, null, this.getFieldInfo());
+        }
+      , clauseSettings: function(glue, end) {
+          return {
+              glue: glue
+            , sql: this.gs()
+            , orField: this.fs()
+            , end: end || _.identity
+          };
+        }
       , getWhere: function(where) {
-
-          var s = getSQLt(this.tables[0].getTableOptions())
-            , fields = this.getFieldInfo()
-            , nd = ' and '
-            , pj = _.bind(u.concatj, null, nd);
-
-          where = !!where.length ? nd + u.concatj(nd, where.map(checkEach)) : '';
-          return pj(this.mapTablesFn('getWhereSQL')) + where;
-
-          function checkEach(a) {
-
-            var comb;
-
-            if (_.isObject(a) && !_.isArray(a) && !isType(a)) {
-              return pj(_.pairs(a).map(checkEach));
-            }
-
-            if (_.isString(a)) {
-              return a;
-            }
-
-            if (_.isArray(a)) {
-              comb = a.length === 3 ? a[1] : '=';
-              return s(toEqExpr(orField(a[0]), _.last(a), comb));
-            }
-
-            return s(a);
-          }
-
-          function orField(t) {
-            return (t in fields) ? fields[t] : t;
-          }
+          var s = { glue: ' and ', combine: combineWhere };
+          return this.mapTablesFnClause('getWhereSQL', s, where);
         }
-      , getOrderBy: function() {
-          return u.concatj(', ', this.mapTablesFn('getOrderBySQL'));
+      , getOrderBy: function(order_by) {
+          var s = { glue: ', ', combine: combineOrder }
+          return this.mapTablesFnClause('getOrderBySQL', s, order_by);
         }
-      , getGroupBy: function() {
+      , getGroupBy: function(group_by) {
           return u.concatj(', ', this.mapTablesFn('getGroupBySQL'));
         }
-      , getHaving: function() {
+      , getHaving: function(having) {
           return u.concatj(' and ', this.mapTablesFn('getHavingSQL'))
         }
-      , getLimit: function() {
+      , getLimit: function(limit) {
           return _.last(u.compact(this.mapTablesFn('getLimitSQL')));
         }
-      , getOffset: function() {
+      , getOffset: function(offset) {
           return _.last(u.compact(this.mapTablesFn('getOffsetSQL')));
         }
       , mapTables: function(f) {
           return this.tables.map(f);
+        }
+      , mapTablesFnClause: function(f_name, settings, data) {
+          var opts = this.clauseSettings(settings.glue);
+          return u.concatj(
+              settings.glue
+            , this.mapTablesFn(f_name).concat(withClause(opts, settings.combine, data))
+          );
         }
       , mapTablesFn: function(f_name) {
           var args = u.slice(arguments, 1);
@@ -456,6 +451,46 @@ function getSQL(opts, thing) {
 
 function withOpts(f, opts) {
   return _.bind(f, null, opts);
+}
+
+function orField(fields, t) {
+  return (t in fields) ? fields[t] : t;
+};
+
+function combineWhere(opts, arr) {
+  var c = arr.length === 3 ? arr[1] : '=';
+  return opts.sql(toEqExpr(opts.orField(arr[0]), _.last(arr), c));
+}
+
+function combineOrder(opts, arr) {
+  arr[0] = opts.sql(new Token(opts.orField(arr[0])));
+  return u.concatj(' ', arr)
+}
+
+function withClause(opts, combine, data) {
+
+  var glue = opts.glue
+    , gluer = _.bind(u.concatj, null, glue);
+
+  return !!data.length ? data.map(checkEach) : [];
+
+  function checkEach(el) {
+
+    if (_.isObject(el) && !_.isArray(el) && !isType(el)) {
+      return gluer(_.pairs(el).map(checkEach));
+    }
+
+    if (_.isString(el)) {
+      return el;
+    }
+
+    if (_.isArray(el)) {
+      return combine(opts, el);
+    }
+
+    return opts.sql(a);
+  }
+
 }
 
 var types = {
