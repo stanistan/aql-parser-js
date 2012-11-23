@@ -8,7 +8,9 @@ var _ = require('underscore')
   , jarr = u.jarr;
 
 var Token = inherit('Token', Type
-  , function(n) { this.value = n; }
+  , function(n) {
+      this.value = n;
+    }
   , {   hasTableName: function() {
           return typeof this.value == 'string'
             ? this.value.indexOf('.') > 0
@@ -64,7 +66,14 @@ var CaseWhen = inherit('CaseWhen', Expr
     }
   , {   getSQL: function(opts) {
           var s = getSQLt(opts);
-          return j(' ', 'case', s(this.col), this.conds.map(s).join(' '), s(this.els), 'end');
+          return j(
+              ' '
+            , 'case'
+            , s(this.col)
+            , this.conds.map(s).join(' ')
+            , s(this.els)
+            , 'end'
+          );
         }
     }
 );
@@ -470,27 +479,29 @@ function combineOrder(opts, arr) {
 function withClause(opts, combine, data) {
 
   var glue = opts.glue
-    , gluer = _.bind(u.concatj, null, glue);
+    , gluer = _.bind(u.concatj, null, glue)
+    , checkEach = _.bind(checkEachClause, null, opts, gluer, combine);
 
   return !!data.length ? data.map(checkEach) : [];
+}
 
-  function checkEach(el) {
+function checkEachClause(opts, gluer, combine, el) {
 
-    if (_.isObject(el) && !_.isArray(el) && !isType(el)) {
-      return gluer(_.pairs(el).map(checkEach));
-    }
+  var recur = _.bind(checkEachClause, null, opts, gluer, combine);
 
-    if (_.isString(el)) {
-      return el;
-    }
-
-    if (_.isArray(el)) {
-      return combine(opts, el);
-    }
-
-    return opts.sql(a);
+  if (_.isObject(el) && !_.isArray(el) && !isType(el)) {
+    return gluer(_.pairs(el).map(recur));
   }
 
+  if (_.isString(el)) {
+    return el;
+  }
+
+  if (_.isArray(el)) {
+    return combine(opts, el);
+  }
+
+  return opts.sql(a);
 }
 
 var types = {

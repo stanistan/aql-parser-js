@@ -3,6 +3,11 @@
   , "version": "0.1.0"
   , "description": "A parser for AQL in node using jison."
   , "author": "Stan Rozenraukh <stan@stanistan.com>"
+  , "keywords": ["aql", "sql", "parser"]
+  , "repository": {
+        "type": "git"
+      , "url": "https://github.com/stanistan/aql-parser-js.git"
+    }
   , "dependencies": {
         "jison": "0.3.x"
       , "underscore": "1.4.x"
