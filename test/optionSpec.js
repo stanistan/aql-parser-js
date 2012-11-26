@@ -202,6 +202,23 @@ describe('with having', function() {
   withPrefix('having', 'testing having clause', havings, aql.parse(q), expected);
 });
 
+describe('with limit', function() {
+
+  it('should set the limit', function() {
+    var q = 'table { field }'
+      , parsed = aql.parse(q);
+
+    expect(parsed.getSQL({limit: 10})).toEqual('select table.field from table limit 10');
+  });
+
+  it('should override the limit if set in the query', function() {
+    var q = 'table { field limit 1 }'
+      , parsed = aql.parse(q);
+    expect(parsed.getSQL({limit: 10})).toEqual('select table.field from table limit 10');
+  });
+
+});
+
 
 function testWithKey(key, clause) {
   var o = {};
