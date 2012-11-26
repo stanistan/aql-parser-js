@@ -19,7 +19,7 @@
   , "main": "./src/aql.js"
   , "scripts": {
         "test": "jasmine-node ./test"
-      , "gen-parser": "node_modules/.bin/jison src/aql.jison src/aql.jisonlex -o src/parser.js"
+      , "gen-parser": "node_modules/.bin/jison src/lang/grammar.jison src/lang/lexer.jisonlex -o src/parser.js"
       , "build-test": "npm run-script build-verbose && npm test"
       , "build-verbose": "npm run-script gen-parser > verbose"
     }
