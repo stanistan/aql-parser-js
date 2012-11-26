@@ -173,20 +173,46 @@ describe('with order by', function() {
   (function() {
       var prev = 'select artist.name from artist where artist.active = 1\
                   order by artist.name desc, artist.bio asc';
-      withPrefix('testing order by with active', clauses, p, prev);
+      withPrefix('order_by', 'testing order by with active', clauses, p, prev);
   })();
 
   (function() {
     var prev = 'select artist.name from artist order by artist.name desc, artist.bio asc';
-    withPrefix('testing order by without active', clauses, aql.parse(q), prev);
+    withPrefix('order_by', 'testing order by without active', clauses, aql.parse(q), prev);
   })();
 
 });
 
-function withPrefix(prefix, clauses, parse, result) {
+describe('with having', function() {
+
+  var q = 'artist { name } label { }';
+
+  var havings = [
+      ['artist.name = \'Pink Floyd\' and label.id = 10']
+    , ['artist.name = \'Pink Floyd\'', 'label.id = 10']
+    , [['artist.name', 'Pink Floyd'], ['label.id', 10]]
+    , [['name', 'Pink Floyd'], ['id', 10]]
+    , [{ name: 'Pink Floyd' }, { id: 10 }]
+    , { name: 'Pink Floyd', id: 10 }
+  ];
+
+  var expected = 'select artist.name from artist left join label\
+                  having artist.name = \'Pink Floyd\' and label.id = 10';
+
+  withPrefix('having', 'testing having clause', havings, aql.parse(q), expected);
+});
+
+
+function testWithKey(key, clause) {
+  var o = {};
+  o[key] = clause;
+  return o;
+}
+
+function withPrefix(k, prefix, clauses, parse, result) {
   clauses.forEach(function(cl, i) {
     it(prefix + i, function() {
-      var f = function() { return parse.getSQL({ order_by: cl }); };
+      var f = function() { return parse.getSQL(testWithKey(k, cl)); };
       u.compare(f, null, result);
       prev = f();
     });

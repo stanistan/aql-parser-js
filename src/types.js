@@ -232,27 +232,27 @@ var Query = inherit('Query', Sel
       , fs: function() {
           return _.bind(orField, null, this.getFieldInfo());
         }
-      , clauseSettings: function(glue, end) {
+      , clauseSettings: function(glue) {
           return {
               glue: glue
             , sql: this.gs()
             , orField: this.fs()
-            , end: end || _.identity
           };
         }
       , getWhere: function(where) {
-          var s = { glue: ' and ', combine: combineWhere };
+          var s = { glue: ' and ', combine: combineSingleExpr };
           return this.mapTablesFnClause('getWhereSQL', s, where);
         }
       , getOrderBy: function(order_by) {
-          var s = { glue: ', ', combine: combineOrder }
+          var s = { glue: ', ', combine: combineByExpr }
           return this.mapTablesFnClause('getOrderBySQL', s, order_by);
         }
       , getGroupBy: function(group_by) {
           return u.concatj(', ', this.mapTablesFn('getGroupBySQL'));
         }
       , getHaving: function(having) {
-          return u.concatj(' and ', this.mapTablesFn('getHavingSQL'))
+          var s = { glue: ' and ', combine: combineSingleExpr };
+          return this.mapTablesFnClause('getHavingSQL', s, having);
         }
       , getLimit: function(limit) {
           return _.last(u.compact(this.mapTablesFn('getLimitSQL')));
@@ -466,12 +466,12 @@ function orField(fields, t) {
   return (t in fields) ? fields[t] : t;
 };
 
-function combineWhere(opts, arr) {
+function combineSingleExpr(opts, arr) {
   var c = arr.length === 3 ? arr[1] : '=';
   return opts.sql(toEqExpr(opts.orField(arr[0]), _.last(arr), c));
 }
 
-function combineOrder(opts, arr) {
+function combineByExpr(opts, arr) {
   arr[0] = opts.sql(new Token(opts.orField(arr[0])));
   return u.concatj(' ', arr)
 }

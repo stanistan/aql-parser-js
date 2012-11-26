@@ -47,11 +47,21 @@ function inherit(n, from, f, methods) {
 
 var Type = inherit('Type', {}
   , function() { }
-  , {   getTypeName: function() { return this[pos.n]; }
-      , isa: function(t) { return this instanceof t; }
-      , merge: function(o) { mergeToObject(this, o); }
-      , toJSON: function() { return _.extend(this, { type: this.getTypeName() }); }
-      , toString: function() { return '[' + this.getTypeName() + ']'; } }
+  , {   getTypeName: function() {
+          return this[pos.n];
+        }
+      , isa: function(t) {
+          return this instanceof t;
+        }
+      , merge: function(o) {
+          mergeToObject(this, o);
+        }
+      , toJSON: function() {
+          return _.extend(this, { type: this.getTypeName() });
+        }
+      , toString: function() {
+          return '[' + this.getTypeName() + ']'; }
+        }
 );
 
 function mergeToObject(o, things) {
@@ -70,9 +80,15 @@ function toProto(o, fn, name) {
 
 function inheritsTypes(types, type) {
 
-  var isa = function(v, k) { return !type.isa(v) || [k, v]; }
-    , ul = function(t) { return _.chain(types).map(isa).filter(_.isArray).value(); }
-    , l = function(t) { return ul(_.isFunction(t) ? new t('a') : t).length; }
+  var isa = function(v, k) {
+        return !type.isa(v) || [k, v];
+      }
+    , ul = function(t) {
+        return _.chain(types).map(isa).filter(_.isArray).value();
+      }
+    , l = function(t) {
+        return ul(_.isFunction(t) ? new t('a') : t).length;
+      }
     , sort = _.compose(l, _.first);
 
   return _.chain(ul(type)).sortBy(sort).reverse().object().value();
