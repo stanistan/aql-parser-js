@@ -15,7 +15,7 @@ npm install aql-parser
 
 ## AQL Syntax
 
-A basic introduction.
+A basic introduction with corresponding SQL.
 
 ```
 artist { name }         -> select artist.name from artist
@@ -34,9 +34,9 @@ label on artist.id = artist_id {
     name as label_name
     order by name
 }
+```
 
-->
-
+```sql
 select
     artist.name,
     label.name as label_name
@@ -46,7 +46,7 @@ where artist.name ilike 'pink %'
 order by label.name
 ```
 
-see `sqlSpec` in tests for more structure/usage.
+see `test/sqlSpec` in tests for more structure/usage.
 
 ## JS Usage
 
@@ -71,7 +71,7 @@ query.getFieldInfo(); // { 'name' : 'artist.name' }
 
 #### SQL Options
 
-Table constraints:
+##### Table constraints:
 
 ```js
 // given the previous AQL statement and query object
@@ -100,7 +100,7 @@ aql.parse(statement).getSQL(options);
 // where artist.active = 1
 ```
 
-Default fields:
+##### Default fields:
 
 ```js
 var options = {
@@ -111,15 +111,104 @@ var options = {
 };
 
 aql.parse(statement).getSQL(options);
-// select
-//  artist.id as artist_id,
-//  artist.name,
-//  label.id as label_id,
-//  label.name as label_name
-// from artist
-// left join label on artist.id = label.artist_id and label.active = 1
-// where artist.active = 1
 ```
+
+Output:
+
+```sql
+select
+  artist.id as artist_id,
+  artist.name,
+  label.id as label_id,
+  label.name as label_name
+from artist
+left join label on artist.id = label.artist_id and label.active = 1
+where artist.active = 1
+```
+
+##### A parser with options built in:
+
+```js
+var options = {
+    constraints: ['active', 1]
+  , fields: function(table) {
+      return { id: table.name + '_id' };
+    }
+};
+
+var p = new aql.Parser(options)
+  , parse = function(statement) { return p.parse(statement); };
+```
+
+##### Modifying the query with clauses:
+
+```js
+
+// this uses the above parse function
+
+var statement = '\
+    artist {\
+        name\
+    }\
+    label on artist.id = artist_id {\
+        name as label_name\
+    }\
+';
+
+var query = parse(statement);
+
+query.getSQL({
+    where: {
+        id: 10
+    }
+});
+```
+
+Output:
+
+```sql
+select
+  artist.id as artist_id,
+  artist.name,
+  label.id as label_id,
+  label.name as label_name
+from artist
+left join label on artist.id = label.artist_id and label.active = 1
+where
+  artist.active = 1 and
+  artist.id = 10
+```
+
+---
+
+```js
+var clauses = {
+  , limit: 10
+  , offset: 20
+};
+
+query.getSQL(clauses);
+```
+
+Output:
+
+```sql
+select
+  artist.id as artist_id,
+  artist.name,
+  label.id as label_id,
+  label.name as label_name
+from artist
+left join label on artist.id = label.artist_id and label.active = 1
+where
+  artist.active = 1
+limit 10
+offset 20
+```
+
+See `test/optionSpec` for other ways of manipulating clauses.
+
+Currently the only clauses supported are `where|order_by|group_by|having|limit|offset`.
 
 ### Other Uses:
 
