@@ -232,3 +232,17 @@ do this in another branch.
 ```
 npm run-script build-test
 ```
+
+## To do:
+
+- an option for `Query.prototype.getSQL` for implicit joins.
+
+  ```js
+  query.getSQL({
+    joinOn: function(table1, table2) {
+      // if no join return false
+      // else return string (table args are Table types)
+      // this method would only get called if there is no join defined
+    }
+  });
+  ```
