@@ -47,6 +47,7 @@ queries
 table_defs
   : table_def table_defs  -> [$1].concat($2)
   | table_def             -> [$1]
+  | GET_ARROW body        -> [new t.AnonTable($body.selects, $body.clauses, $body.posts)]
   ;
 
 table_def

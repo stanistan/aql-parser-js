@@ -23,6 +23,9 @@ dgd [0-9.]
 "~"                       return 'TILDE';
 "||"                      return 'CONCAT';
 
+"->"                      return 'GET_ARROW';
+"<-"                      return 'SET_ARROW';
+
 ("true"|"false")          return 'BOOL';
 "null"                    return 'NULL';
 "not"                     return 'NOT';

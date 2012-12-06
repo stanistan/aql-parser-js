@@ -17,7 +17,7 @@ var Token = inherit('Token', Type
           return this.hasTableName() ? this.value : opts.table + '.' + this.value;
         }
       , getSQL: function(opts) {
-          return this.withTableName(opts);
+          return opts.table ? this.withTableName(opts) : this.value;
         }
     }
 );

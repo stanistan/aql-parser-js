@@ -8,6 +8,7 @@ var typeFiles = [
   , 'exprs'
   , 'fields'
   , 'table'
+  , 'anontable'
   , 'query'
 ];
 
