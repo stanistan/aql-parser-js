@@ -162,6 +162,22 @@ function slice(thing) {
   return [].slice.apply(thing, [].slice.call(arguments, 1));
 }
 
+function camelize(s) {
+  var pieces = s.split('_')
+    , first = pieces[0]
+    , rest = pieces.slice(1);
+
+  return first + rest.map(capitalize).join('');
+}
+
+function capitalize(s) {
+  return s[0].toUpperCase() + s.slice(1);
+}
+
+function getCamelize(suffix) {
+  return camelize('get_' + suffix);
+}
+
 exports.inheritsTypes = inheritsTypes;
 exports.inherit = inherit;
 exports.Type = Type;
@@ -177,3 +193,4 @@ exports.partition = partition;
 exports.isType = isType;
 exports.compact = compact;
 exports.slice = slice;
+exports.getCamelize = getCamelize;

@@ -4,6 +4,9 @@ var _ = require('underscore')
   , Sel = require('./sel').Sel
   , ut = require('./utils');
 
+var CLAUSES = ['where', 'group_by', 'having', 'order_by', 'limit', 'offset']
+  , DEFAULT_JOIN = 'left';
+
 var Query = inherit('Query', Sel
   , function(tables) {
       this.tables = tables || [];
@@ -11,38 +14,19 @@ var Query = inherit('Query', Sel
     }
   , {
         getSQL: function(options) {
-
-          options = _.extend(options || {}, _.reduce(u.slice(arguments, 1), u.extend, {}));
-          options.constraints = u.arrArrayify(2, options.constraints || []);
-          options.fields = options.fields || function() { return {} };
-          options.joinType = options.joinType || 'left';
-
-          var clauses = ['where', 'order_by', 'group_by', 'having', 'limit', 'offset'];
-
-          var cl = {};
-          clauses.forEach(function(a) {
-            cl[a] = u.slice(u.arrayify(options[a] || []));
-            delete options[a];
-          });
-
-          this.options = options;
-          this.tables.map(function(t) {
-            t.options = options;
-          });
-
           var f = function(t) { return t.getFieldsAsSQL().join(', '); }
-            , j = function(t) { return t.getJoin(); };
+            , j = function(t) { return t.getJoin(); }
+            , clauseOpts;
 
-          var fields    = this.tables.map(f)
-            , from      = this.tables[0].getFrom()
-            , joins     = _.rest(_.clone(this.tables)).map(j).join(' ').trim()
-            , where     = this.getWhere(cl.where)       || null
-            , order_by  = this.getOrderBy(cl.order_by)  || null
-            , group_by  = this.getGroupBy(cl.group_by)  || null
-            , having    = this.getHaving(cl.having)     || null
-            , limit     = this.getLimit(cl.limit)       || null
-            , offset    = this.getOffset(cl.offset)     || null;
+          // parse options, this deletes clause keys from the options object
+          options = this.constructOptions(options || {}, arguments);
+          clauseOpts = this.prepClauseOpts(options);
+          this.applyOptionsToQuery(options);
 
+          var fields = this.tables.map(f)
+            , from = this.tables[0].getFrom()
+            , joins = _.rest(_.clone(this.tables)).map(j).join(' ').trim()
+            , clauseStrings = this.getClauseStrings(clauseOpts, true);
 
           var re = [
             , 'select'
@@ -50,16 +34,44 @@ var Query = inherit('Query', Sel
             , u.compact(fields).join(', ')
             , from
             , joins
-            , where     ? 'where '    + where     : ''
-            , group_by  ? 'group by ' + group_by  : ''
-            , having    ? 'having '   + having    : ''
-            , order_by  ? 'order by ' + order_by  : ''
-            , limit     ? 'limit '    + limit     : ''
-            , offset    ? 'offset '   + offset    : ''
-          ];
+          ].concat(clauseStrings);
 
           return u.compact(re).join(' ');
+        }
+      , constructOptions: function(opts, rest_args) {
 
+          var options = _.extend(opts || {}, _.reduce(u.slice(rest_args, 1), u.extend, {}));
+
+          options.constraints = u.arrArrayify(2, options.constraints || []);
+          options.fields = options.fields || function() { return {} };
+          options.joinType = options.joinType || DEFAULT_JOIN;
+
+          return options;
+        }
+      , prepClauseOpts: function(options) {
+          var cl = {};
+          CLAUSES.forEach(function(a) {
+            cl[a] = u.slice(u.arrayify(options[a] || []));
+            delete options[a];
+          });
+          return cl;
+        }
+      , applyOptionsToQuery: function(opts) {
+          this.options = opts;
+          this.tables.map(function(t) {
+            t.options = opts;
+          });
+        }
+      , getClauseStrings: function(opts, only_val) {
+          var query = this
+            , vals = CLAUSES.map(function(c) {
+                var parsed = query[u.getCamelize(c)](opts[c]) || null
+                  , val = parsed ? [c.replace(/_/g, ' '), parsed].join(' ') : '';
+
+                return !!only_val ? val : _.object([c], [val]);
+              });
+
+          return !!only_val ? vals : _.reduce(vals, u.extend, {});
         }
       , getDistinct: function(primary_table) {
           var opt = primary_table.getTableOptions()
